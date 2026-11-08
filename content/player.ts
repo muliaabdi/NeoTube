@@ -2,7 +2,7 @@ import { retry, throttle } from 'es-toolkit'
 import { emit, log, isEmbedFrame, isYTMusic, nouPolicy, nouStorage, parseJson } from './utils'
 import { hideLiveChat, showLiveChatButton, showLiveChatReplayButton } from './livechat'
 import { originalLabels } from './audio'
-import { clearSkipSegments, getSkipSegments, isSponsorBlockEnabled, renderSkipSegments, Segment } from './sponsorblock'
+import { clearSkipSegments, getSkipSegments, getSponsorBlockCategories, isSponsorBlockEnabled, renderSkipSegments, Segment } from './sponsorblock'
 import { playbackRates } from '../lib/playback-rate'
 import { applyCaptionFontScale } from './captions'
 import { applyAutoplayPolicy } from './autoplay'
@@ -397,7 +397,7 @@ export function handleVideoPlayer(el: any) {
       clearSkipSegments()
       skipSegments = { videoId: '', segments: [] }
       if (isSponsorBlockEnabled()) {
-        const nextSkipSegments = await getSkipSegments(videoId)
+        const nextSkipSegments = await getSkipSegments(videoId, getSponsorBlockCategories())
         // A previous request may finish after the user has navigated to a new
         // video. Never let that stale response replace or paint the new video.
         if (!isCurrent() || curVideoId !== videoId) {

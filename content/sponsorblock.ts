@@ -20,6 +20,24 @@ export function isSponsorBlockEnabled() {
   }
 }
 
+export const DEFAULT_SPONSOR_BLOCK_CATEGORIES = ['sponsor', 'selfpromo', 'interaction']
+
+export function getSponsorBlockCategories(): string[] {
+  const value = nouStorage.getItem('nou:settings')
+  if (!value) {
+    return DEFAULT_SPONSOR_BLOCK_CATEGORIES
+  }
+  try {
+    const settings = JSON.parse(value)
+    // An explicit empty selection stands: the user turned every category off.
+    return Array.isArray(settings.sponsorBlockCategories)
+      ? settings.sponsorBlockCategories
+      : DEFAULT_SPONSOR_BLOCK_CATEGORIES
+  } catch (e) {
+    return DEFAULT_SPONSOR_BLOCK_CATEGORIES
+  }
+}
+
 // https://wiki.sponsor.ajay.app/w/Types#Category
 const categoryColors: Record<string, string> = {
   sponsor: '#00d400',
@@ -170,8 +188,15 @@ function buildOverlay(segments: Segment[], duration: number, chapters: Chapter[]
   return overlay
 }
 
-export async function getSkipSegments(videoId: string) {
-  const res = await fetch(`https://sponsor.ajay.app/api/skipSegments?videoID=${videoId}`)
+export async function getSkipSegments(videoId: string, categories: string[]) {
+  if (!categories.length) {
+    return { videoId, segments: [] as Segment[] }
+  }
+  const params = new URLSearchParams({
+    videoID: videoId,
+    categories: JSON.stringify(categories),
+  })
+  const res = await fetch(`https://sponsor.ajay.app/api/skipSegments?${params}`)
   let segments: Segment[] = []
   if (res.status == 200) {
     segments = (await res.json()) as Segment[]

@@ -116,6 +116,7 @@ const splitRolePrelude = (enabled: boolean, role: 'browse' | 'player', mini = fa
 const getContentSettingsSnapshot = () => {
   const {
     sponsorBlock,
+    sponsorBlockCategories,
     blockAds,
     playbackRate,
     playbackQuality,
@@ -132,6 +133,7 @@ const getContentSettingsSnapshot = () => {
   } = settings$.get()
   return {
     sponsorBlock,
+    sponsorBlockCategories,
     blockAds,
     playbackRate,
     playbackQuality,
