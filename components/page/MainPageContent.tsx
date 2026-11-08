@@ -29,6 +29,7 @@ import { describeDownloadError } from '@/lib/download-error'
 import { t } from 'i18next'
 import { downloads$ } from '@/states/downloads'
 import { resolveUserAgent } from '@/lib/useragent'
+import { withContentCountry } from '@/lib/content-country'
 import { retryNativeViewCall } from '@/lib/native-view-call'
 import { openPastedUrl } from '@/lib/paste-url'
 import { usePasteUrl } from '@/lib/hooks/usePasteUrl'
@@ -117,6 +118,7 @@ const getContentSettingsSnapshot = () => {
   const {
     sponsorBlock,
     sponsorBlockCategories,
+    contentCountry,
     blockAds,
     playbackRate,
     playbackQuality,
@@ -134,6 +136,7 @@ const getContentSettingsSnapshot = () => {
   return {
     sponsorBlock,
     sponsorBlockCategories,
+    contentCountry,
     blockAds,
     playbackRate,
     playbackQuality,
@@ -579,7 +582,10 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
     // loading home first and letting the page restore itself loads twice, the
     // first time from 0.
     const lastPlaying = settings$.restoreOnStart.get() ? getLastPlaying() : undefined
-    const home = isYTMusic ? 'https://music.youtube.com' : 'https://m.youtube.com'
+    const home = withContentCountry(
+      isYTMusic ? 'https://music.youtube.com' : 'https://m.youtube.com',
+      settings$.contentCountry.get(),
+    )
     if (lastPlaying) {
       restored = true
       const url = normalizeUrl(lastPlaying.url)

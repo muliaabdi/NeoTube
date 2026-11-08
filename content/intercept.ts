@@ -93,10 +93,24 @@ export function intercept() {
   window.fetch = async (...args) => {
     const request = args[0]
     const url = request instanceof Request ? request.url : request.toString()
+    const fetchedUrl = new URL(url, location.origin)
+    const country = window.NouTube?.getSettings?.()?.contentCountry
+    if (typeof country === 'string' && fetchedUrl.pathname.startsWith('/youtubei/')) {
+      if (request instanceof Request) {
+        const body = await request.clone().text()
+        const rewritten = applyContentCountry(body, country)
+        if (rewritten !== body) {
+          args[0] = new Request(request, { body: rewritten as BodyInit })
+        }
+      } else if (args[1] && typeof (args[1] as RequestInit).body === 'string') {
+        const init = args[1] as RequestInit
+        init.body = applyContentCountry(init.body, country) as BodyInit
+      }
+    }
     let res = await winFetch(...args)
     // Relative to the page, as fetch itself resolves it: without a base a relative
     // url throws here and turns a response that arrived fine into a rejection.
-    const match = new URL(url, location.origin).pathname.match(RE_INTERCEPT)
+    const match = fetchedUrl.pathname.match(RE_INTERCEPT)
     const blocklist = window.NouTube?.getBlocklist?.()
     const settings = window.NouTube?.getSettings?.()
     const options = {
@@ -136,6 +150,7 @@ export function intercept() {
   const xhrOpen = XMLHttpRequest.prototype.open
   XMLHttpRequest.prototype.open = function (...args: any[]) {
     const url = args[1].toString()
+    ;(this as unknown as { __nouUrl?: string }).__nouUrl = url
     const match = new URL(url, location.origin).pathname.match(RE_INTERCEPT)
     let cached = false
     let filteredText: string
@@ -187,4 +202,36 @@ export function intercept() {
     // Preserve async and optional authentication arguments, including sync XHR.
     return xhrOpen.apply(this, args as Parameters<typeof xhrOpen>)
   }
+  const xhrSend = XMLHttpRequest.prototype.send
+  XMLHttpRequest.prototype.send = function (...args: any[]) {
+    const url = (this as unknown as { __nouUrl?: string }).__nouUrl
+    const country = window.NouTube?.getSettings?.()?.contentCountry
+    if (typeof country === 'string' && url) {
+      const pathname = new URL(url, location.origin).pathname
+      if (pathname.startsWith('/youtubei/')) {
+        args[0] = applyContentCountry(args[0], country)
+      }
+    }
+    return xhrSend.apply(this, args as Parameters<typeof xhrSend>)
+  }
+}
+
+const ISO_COUNTRY = /^[A-Za-z]{2}$/
+
+/** Rewrites `context.client.gl` in an innertube request body so the response
+ * follows `country`. Anything it cannot safely parse passes through as-is. */
+export function applyContentCountry(body: unknown, country?: string | null): unknown {
+  if (typeof body !== 'string' || !country || !ISO_COUNTRY.test(country)) {
+    return body
+  }
+  try {
+    const data = JSON.parse(body)
+    if (data && typeof data === 'object' && data.context?.client && typeof data.context.client === 'object') {
+      data.context.client.gl = country.toUpperCase()
+      return JSON.stringify(data)
+    }
+  } catch (error) {
+    // Not JSON: let YouTube have it verbatim.
+  }
+  return body
 }

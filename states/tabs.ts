@@ -3,6 +3,7 @@ import { syncObservable } from '@legendapp/state/sync'
 import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv'
 import { genId } from '@/lib/utils'
 import { getLastPlaying, getVideoIdFromUrl, withResumeTime } from '@/lib/last-playing'
+import { withContentCountry } from '@/lib/content-country'
 import { history$ } from './history'
 import { settings$ } from './settings'
 
@@ -43,7 +44,10 @@ const MAX_RECENTLY_CLOSED_TABS = 10
 let startupTabsInitialized = false
 
 export function getDefaultTabUrl() {
-  return settings$.home.get() === 'yt-music' ? 'https://music.youtube.com/' : 'https://www.youtube.com/'
+  return withContentCountry(
+    settings$.home.get() === 'yt-music' ? 'https://music.youtube.com/' : 'https://www.youtube.com/',
+    settings$.contentCountry.get(),
+  )
 }
 
 function normalizeTabs(data: Partial<Store> | undefined) {
