@@ -73,6 +73,12 @@ it('seeds the saved Shorts preference before content initialization on each shel
   expect(read('../content/noutube.ts')).toContain('shortsHidden: window.NouTubeHideShorts !== false')
 })
 
+it('re-syncs category and country changes to a running webview', () => {
+  const app = readFileSync(new URL('../components/page/MainPageContent.tsx', import.meta.url), 'utf8')
+  expect(app).toContain('useObserveEffect(settings$.sponsorBlockCategories, () => syncSettingsToWebview())')
+  expect(app).toContain('useObserveEffect(settings$.contentCountry, () => syncSettingsToWebview())')
+})
+
 it('rewrites the innertube client country without touching anything else', () => {
   const rewritten = applyContentCountry('{"context":{"client":{"hl":"en"}},"browseId":"x"}', 'ID') as string
   expect(JSON.parse(rewritten)).toEqual({ context: { client: { hl: 'en', gl: 'ID' } }, browseId: 'x' })

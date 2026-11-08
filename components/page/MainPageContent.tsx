@@ -988,6 +988,8 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
   useObserveEffect(settings$.translateComments, () => syncSettingsToWebview())
   useObserveEffect(settings$.translationTargetLanguage, () => syncSettingsToWebview())
   useObserveEffect(settings$.useSystemCaptionStyle, () => syncSettingsToWebview())
+  useObserveEffect(settings$.sponsorBlockCategories, () => syncSettingsToWebview())
+  useObserveEffect(settings$.contentCountry, () => syncSettingsToWebview())
 
   // Track whether Android runs us on a desktop-class screen. The manual
   // desktop-site override only lasts for one such session, so drop it whenever
