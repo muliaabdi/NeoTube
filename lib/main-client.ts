@@ -1,3 +1,6 @@
+import { compareVersions, fetchLatestRelease } from './check-update'
+import { version } from '../package.json'
+
 export type FormatOption = {
   formatId: string
   label: string
@@ -14,7 +17,7 @@ export type FormatOption = {
 
 export type UpdateCheckResult =
   | { status: 'not-available' }
-  | { status: 'available'; version: string }
+  | { status: 'available'; version: string; url?: string }
   | { status: 'error'; message?: string }
 
 export interface MainClient {
@@ -127,9 +130,16 @@ export const mainClient: MainClient = {
   async setBlocklist() {},
   async setBlockAds() {},
   async isUpdateSupported() {
-    return false
+    return true
   },
-  async checkForUpdate() {
+  async checkForUpdate(): Promise<UpdateCheckResult> {
+    const result = await fetchLatestRelease(fetch)
+    if (result.status === 'error') {
+      return result
+    }
+    if (result.status === 'available' && compareVersions(result.version, version) > 0) {
+      return { status: 'available', version: result.version, url: result.url }
+    }
     return { status: 'not-available' }
   },
   async quitAndInstall() {},
