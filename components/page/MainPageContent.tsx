@@ -383,6 +383,7 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
   const nativeRef = useRef<typeof NouTubeViewModule>(null)
   const playerRef = useRef<typeof NouTubeViewModule>(null)
   const splitWatchView = useValue(settings$.miniPlayer) && isAndroid
+  const showHeader = useValue(settings$.showHeader)
   const playerUrl = useValue(ui$.playerUrl)
   const playerMode = useValue(ui$.playerMode)
   const playerFull = playerMode === 'full'
@@ -1175,7 +1176,7 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
           headerPosition === 'bottom' && 'flex-col-reverse',
         )}
       >
-        {nIf(!pictureInPicture, <NouHeader getNoutube={getNoutube} />)}
+        {nIf(!pictureInPicture && showHeader, <NouHeader getNoutube={getNoutube} />)}
         {nIf(isWeb, <SettingsModal />)}
         {isWeb ? (
           <View className="relative flex-1 min-h-0">

@@ -68,6 +68,7 @@ export interface SettingsSnapshot {
   restoreOnStart: boolean
   pullToRefreshEnabled: boolean
   sponsorBlock: boolean
+  showHeader: boolean
   sponsorBlockCategories: string[]
   contentCountry: string | null
   openSettingsOnLaunch: boolean
@@ -198,6 +199,9 @@ export const normalizeSettings = <T extends Partial<SettingsSnapshot> | undefine
   if (typeof data.blockAds !== 'boolean') {
     data.blockAds = true
   }
+  if (data.showHeader !== true) {
+    data.showHeader = false
+  }
   data.sponsorBlockCategories = normalizeSponsorBlockCategories(data.sponsorBlockCategories)
   data.contentCountry = normalizeContentCountry(data.contentCountry)
   if (data.openSettingsOnLaunch !== false) {
@@ -296,6 +300,7 @@ export const getSettingsSnapshot = (value: Partial<Store> | undefined = settings
   restoreOnStart: typeof value?.restoreOnStart === 'boolean' ? value.restoreOnStart : false,
   pullToRefreshEnabled: typeof value?.pullToRefreshEnabled === 'boolean' ? value.pullToRefreshEnabled : true,
   sponsorBlock: typeof value?.sponsorBlock === 'boolean' ? value.sponsorBlock : true,
+  showHeader: value?.showHeader === true,
   sponsorBlockCategories: normalizeSponsorBlockCategories(value?.sponsorBlockCategories),
   contentCountry: normalizeContentCountry(value?.contentCountry),
   openSettingsOnLaunch: value?.openSettingsOnLaunch === false ? false : true,
@@ -371,6 +376,7 @@ export const settings$ = observable<Store>({
   restoreOnStart: false,
   pullToRefreshEnabled: true,
   sponsorBlock: true,
+  showHeader: false,
   sponsorBlockCategories: DEFAULT_SPONSOR_BLOCK_CATEGORIES,
   contentCountry: null,
   openSettingsOnLaunch: true,

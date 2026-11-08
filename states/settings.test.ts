@@ -49,6 +49,20 @@ describe('settings', () => {
     expect(getSettingsSnapshot({}).showDislikes).toBe(false)
   })
 
+  it('defaults the top bar to hidden and accepts only boolean preferences', () => {
+    expect(getSettingsSnapshot({}).showHeader).toBe(false)
+    expect(normalizePartialSettings()?.showHeader).toBe(false)
+    for (const showHeader of [true, false]) {
+      expect(getSettingsSnapshot({ showHeader }).showHeader).toBe(showHeader)
+      expect(normalizeSettings({ showHeader })?.showHeader).toBe(showHeader)
+    }
+    for (const showHeader of ['true', 1, null]) {
+      const data = { showHeader } as unknown as Partial<SettingsSnapshot>
+      expect(getSettingsSnapshot(data).showHeader).toBe(false)
+      expect(normalizeSettings(data)?.showHeader).toBe(false)
+    }
+  })
+
   it('defaults sponsor block categories to sponsor, selfpromo, interaction', () => {
     expect(getSettingsSnapshot({}).sponsorBlockCategories).toEqual(['sponsor', 'selfpromo', 'interaction'])
     expect(normalizePartialSettings()?.sponsorBlockCategories).toEqual(['sponsor', 'selfpromo', 'interaction'])

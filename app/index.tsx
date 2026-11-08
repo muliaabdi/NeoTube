@@ -9,6 +9,7 @@ import { useIncomingShare } from '@/lib/incoming-share'
 import { parseSharedUrl } from '@/lib/share-intent'
 import * as Linking from 'expo-linking'
 import { MainPage } from '@/components/page/MainPage'
+import { LandingScreen } from '@/components/page/LandingScreen'
 import { isAndroid, isIos, nIf } from '@/lib/utils'
 import NouTubeViewModule from '@/modules/nou-tube-view'
 import { settings$ } from '@/states/settings'
@@ -108,6 +109,16 @@ export default function HomeScreen() {
     }
 
     const backSubscription = BackHandler.addEventListener('hardwareBackPress', function () {
+      if (ui$.landingVisible.get()) {
+        // Already on landing: let the system handle exit.
+        return false
+      }
+      if (ui$.settingsModalOpen.get()) {
+        // Settings open from landing: back goes back to landing.
+        ui$.settingsModalOpen.set(false)
+        ui$.landingVisible.set(true)
+        return true
+      }
       // Back out of the split watch view first: it always returns to the
       // browsing webview instead of stepping back through videos.
       if (handleSplitBack()) {
@@ -136,9 +147,9 @@ export default function HomeScreen() {
         if (!launchSettingsHandled) {
           launchSettingsHandled = true
           // A share still resolving or a deep link means the user came for
-          // content, not for settings.
+          // content, not for the launch menu.
           if (!url && !isResolving && resolvedSharedPayloads.length === 0 && settings$.openSettingsOnLaunch.get()) {
-            ui$.settingsModalOpen.set(true)
+            ui$.landingVisible.set(true)
           }
         }
       })
@@ -162,5 +173,10 @@ export default function HomeScreen() {
     }
   })
 
-  return nIf(scriptOnStart, <MainPage contentJs={scriptOnStart} />)
+  return nIf(scriptOnStart, (
+    <>
+      <MainPage contentJs={scriptOnStart} />
+      <LandingScreen />
+    </>
+  ))
 }

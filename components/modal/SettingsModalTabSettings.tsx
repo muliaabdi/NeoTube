@@ -647,6 +647,13 @@ export const SettingsYouTubeContent = () => {
             />
             <CountrySettingRow />
             <SettingsToggleRow
+              label="Show top bar"
+              description="Show header bar with tabs, search, and menus"
+              icon="view-headline"
+              value={settings.showHeader}
+              onPress={() => settings$.showHeader.set(!settings.showHeader)}
+            />
+            <SettingsToggleRow
               label="Open settings on launch"
               description="Show the settings screen first each time the app starts"
               icon="tune"

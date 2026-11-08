@@ -50,6 +50,7 @@ interface Store {
   libraryModalTab: string
   queueModalOpen: boolean
   settingsModalOpen: boolean
+  landingVisible: boolean
   sleepTimerModalOpen: boolean
   playbackSpeedModalOpen: boolean
   playbackQualityModalOpen: boolean
@@ -105,6 +106,7 @@ export const ui$ = observable<Store>({
   libraryModalTab: '',
   queueModalOpen: false,
   settingsModalOpen: false,
+  landingVisible: false,
   sleepTimerModalOpen: false,
   playbackSpeedModalOpen: false,
   playbackQualityModalOpen: false,
