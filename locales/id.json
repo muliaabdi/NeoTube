@@ -144,8 +144,6 @@
     "transfer": "Impor & ekspor",
     "transferHint": "Masukkan bookmark atau bawa bookmark Anda.",
     "syncHintShort": "Akun, paket, dan sinkronisasi perangkat.",
-    "autoHideHeader": "Sembunyikan dan tampilkan toolbar berdasarkan arah gulir",
-    "hideToolbarWhenScrolled": "Sembunyikan toolbar saat halaman tidak berada di atas",
     "hideShortsInNavbar": "Sembunyikan Shorts di navbar",
     "hideMixPlaylist": "Sembunyikan playlist mix",
     "miniPlayer": "Pemutar mini",
@@ -234,11 +232,6 @@
       "system": "Sistem",
       "hint": "Pilih bahasa atau ikuti bahasa sistem."
     },
-    "headerPosition": {
-      "label": "Posisi toolbar",
-      "top": "Atas",
-      "bottom": "Bawah"
-    },
     "showHomeButtonInHeader": "Tampilkan tombol Beranda di navbar",
     "showBackButtonInHeader": "Tampilkan tombol Kembali di navbar",
     "showForwardButtonInHeader": "Tampilkan tombol Maju di navbar",
@@ -278,10 +271,8 @@
       "portPlaceholder": "mis. 1080"
     },
     "preferencesDistractionFree": "Bebas gangguan",
-    "toolbar": "Bilah alat",
     "toolbarButtons": "Tombol navbar",
     "showHistoryButtonInHeader": "Tampilkan tombol Riwayat di navbar",
-    "doubleTapToToggleHeader": "Ketuk dua kali halaman untuk menyembunyikan atau menampilkan bilah alat",
     "translation": {
       "enable": "Terjemahkan komentar",
       "hint": "Tampilkan tombol terjemahkan pada komentar untuk menerjemahkannya di perangkat Anda.",
@@ -446,10 +437,7 @@
     "available": "Pembaruan v{{version}} tersedia",
     "openRelease": "Tap untuk membuka halaman rilis",
     "upToDate": "Anda sudah menggunakan versi terbaru",
-    "downloading": "Mengunduh pembaruan v{{version}}…",
-    "error": "Gagal memeriksa pembaruan",
-    "downloadedTitle": "Pembaruan siap",
-    "downloadedHint": "Versi {{version}} telah diunduh. Mulai ulang sekarang untuk memasang?"
+    "error": "Gagal memeriksa pembaruan"
   },
   "bookmarks": {
     "removed": "Bookmark dihapus",

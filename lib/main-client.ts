@@ -36,7 +36,6 @@ export interface MainClient {
   setBlockAds(enabled: boolean): Promise<void> | void
   isUpdateSupported(): Promise<boolean>
   checkForUpdate(): Promise<UpdateCheckResult>
-  quitAndInstall(): Promise<void> | void
   discordLogin(): Promise<{ loggedIn: boolean }>
   discordLogout(): Promise<void> | void
   getDiscordStatus(): Promise<{ loggedIn: boolean }> | { loggedIn: boolean }
@@ -142,7 +141,6 @@ export const mainClient: MainClient = {
     }
     return { status: 'not-available' }
   },
-  async quitAndInstall() {},
   async discordLogin() {
     const nativeModule = viewModule().default as NouTubeDownloadClient
     if (typeof nativeModule.discordLogin !== 'function') {
