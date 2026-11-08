@@ -42,7 +42,6 @@ import { useTwColor } from '@/lib/theme'
 import { setFeedNotificationsEnabled } from '@/lib/feed-notifications'
 
 const themes = [null, 'dark', 'light'] as const
-const headerPositions = ['top', 'bottom'] as const
 const surfaceCls =
   'overflow-hidden rounded-[24px] bg-white dark:bg-zinc-900'
 const sectionLabelCls = 'mb-2 px-1 text-[11px] uppercase tracking-[0.18em] text-zinc-600 dark:text-zinc-500'
@@ -877,57 +876,15 @@ export const SettingsAppearanceContent = () => {
 
   return (
     <View className="pb-4">
-      {nIf(
-        !isWeb,
-        <SettingsSection label={t('settings.toolbar')}>
+      <View className={!isWeb ? 'mt-8' : undefined}>
+        <SettingsSection label={t('settings.toolbarButtons')}>
           <View className={surfaceCls}>
-            <View className="flex-row items-center gap-3 px-4 py-4 border-b-2 border-zinc-100 dark:border-zinc-950">
-              <View className={iconWrapCls}>
-                <MaterialIcons name="vertical-align-bottom" color={isDark ? tw('zinc-300') : tw('slate-600')} size={18} />
-              </View>
-              <NouText className="flex-1 font-medium">{t('settings.headerPosition.label')}</NouText>
-              <Segmented
-                options={[t('settings.headerPosition.top'), t('settings.headerPosition.bottom')]}
-                selectedIndex={headerPositions.indexOf(settings.headerPosition)}
-                size={1}
-                onChange={(index) => settings$.headerPosition.set(headerPositions[index])}
-              />
-            </View>
-            {nIf(
-              isAndroid,
-              <SettingsToggleRow
-                label={t('settings.doubleTapToToggleHeader')}
-                icon="touch-app"
-                value={settings.doubleTapToToggleHeader}
-                onPress={() => settings$.doubleTapToToggleHeader.set(!settings.doubleTapToToggleHeader)}
-              />,
-            )}
-            <SettingsToggleRow
-              label={t('settings.autoHideHeader')}
-              icon="visibility-off"
-              value={settings.autoHideHeader}
-              onPress={() => settings$.autoHideHeader.set(!settings.autoHideHeader)}
-            />
-            <SettingsToggleRow
-              label={t('settings.hideToolbarWhenScrolled')}
-              icon="vertical-align-top"
-              value={settings.hideToolbarWhenScrolled}
-              onPress={() => settings$.hideToolbarWhenScrolled.set(!settings.hideToolbarWhenScrolled)}
-            />
             <SettingsToggleRow
               label={t('settings.userStyles.builtin.verticalNavbar.label')}
               icon="view-sidebar"
               value={Boolean(builtinStyles['vertical-navbar']?.enabled)}
               onPress={() => userStyles$.setBuiltinEnabled('vertical-navbar', !builtinStyles['vertical-navbar']?.enabled)}
-              isLast
             />
-          </View>
-        </SettingsSection>,
-      )}
-
-      <View className={!isWeb ? 'mt-8' : undefined}>
-        <SettingsSection label={t('settings.toolbarButtons')}>
-          <View className={surfaceCls}>
             <SettingsToggleRow
               label={t('settings.showLibraryButtonInHeader')}
               icon="video-library"

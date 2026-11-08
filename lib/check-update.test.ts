@@ -24,25 +24,27 @@ test('compareVersions: segmen hilang = 0', () => {
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
 
+const fetchLike = (fn: () => Promise<Response>) => fn as unknown as typeof fetch
+
 test('fetchLatestRelease: 200 -> available dengan versi tanpa v dan url', async () => {
-  const result = await fetchLatestRelease(() =>
-    Promise.resolve(jsonResponse({ tag_name: 'v1.0.0', html_url: 'u' })),
+  const result = await fetchLatestRelease(fetchLike(() =>
+    Promise.resolve(jsonResponse({ tag_name: 'v1.0.0', html_url: 'u' }))),
   )
   expect(result).toEqual({ status: 'available', version: '1.0.0', url: 'u' })
 })
 
 test('fetchLatestRelease: 404 -> not-available', async () => {
-  const result = await fetchLatestRelease(() => Promise.resolve(new Response('', { status: 404 })))
+  const result = await fetchLatestRelease(fetchLike(() => Promise.resolve(new Response('', { status: 404 }))))
   expect(result).toEqual({ status: 'not-available' })
 })
 
 test('fetchLatestRelease: 500 -> error', async () => {
-  const result = await fetchLatestRelease(() => Promise.resolve(new Response('', { status: 500 })))
+  const result = await fetchLatestRelease(fetchLike(() => Promise.resolve(new Response('', { status: 500 }))))
   expect(result.status).toBe('error')
 })
 
 test('fetchLatestRelease: fetch throw -> error', async () => {
-  const result = await fetchLatestRelease(() => Promise.reject(new Error('offline')))
+  const result = await fetchLatestRelease(fetchLike(() => Promise.reject(new Error('offline'))))
   expect(result.status).toBe('error')
 })
 
