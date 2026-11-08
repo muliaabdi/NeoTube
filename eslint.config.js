@@ -17,6 +17,14 @@ module.exports = defineConfig([
     },
   },
   {
+    // Whole-repo runs resolve these installed packages as missing even though
+    // scoped runs, tsc, bundling, and require.resolve all find them; keep the
+    // import plugin from failing on them.
+    settings: {
+      'import/core-modules': ['@radix-ui/colors', '@radix-ui/themes'],
+    },
+  },
+  {
     ignores: ['dist/*'],
   },
 ]);

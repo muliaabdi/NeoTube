@@ -5,7 +5,7 @@ import { useLocales } from 'expo-localization'
 import { clsx, isAndroid, isIos, isWeb, nIf } from '@/lib/utils'
 import { isDynamicColorAvailable } from '@/lib/dynamic-palette'
 import { useValue } from '@legendapp/state/react'
-import { settings$, ZOOM_PRESETS } from '@/states/settings'
+import { settings$, SPONSOR_BLOCK_CATEGORIES, ZOOM_PRESETS } from '@/states/settings'
 import { Segmented } from '../picker/Segmented'
 import { NouMenu } from '../menu/NouMenu'
 import { getDocumentAsync } from 'expo-document-picker'
@@ -357,6 +357,49 @@ const ProxyTextInput = ({ field, ...props }: TextInputProps & { field: ProxyFiel
 
 // NouTube's own behavior. Anything that changes the YouTube page itself belongs on the YouTube
 // side of the settings index instead (see SettingsYouTubeContent).
+
+const sponsorCategoryLabel = (category: string) =>
+  category
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+
+const CountrySettingRow = () => {
+  const tw = useTwColor()
+  const colorScheme = useColorScheme()
+  const isDark = colorScheme !== 'light'
+  const saved = useValue(settings$.contentCountry)
+  const [draft, setDraft] = useState(saved ?? '')
+  useEffect(() => setDraft(saved ?? ''), [saved])
+  return (
+    <View className="flex-row items-center gap-3 px-4 py-4 border-b-2 border-zinc-100 dark:border-zinc-950">
+      <View className={iconWrapCls}>
+        <MaterialIcons name="public" color={isDark ? tw('zinc-300') : tw('slate-600')} size={18} />
+      </View>
+      <View className="flex-1">
+        <NouText className="font-medium">Content country</NouText>
+        <NouText className="mt-1 text-sm leading-5 text-zinc-600 dark:text-zinc-400">
+          Two-letter country code, e.g. ID, US. Empty = default.
+        </NouText>
+      </View>
+      <TextInput
+        className="w-14 rounded-xl bg-zinc-100 px-3 py-2 text-center text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+        value={draft}
+        autoCapitalize="characters"
+        autoCorrect={false}
+        maxLength={2}
+        placeholder="--"
+        placeholderTextColor={isDark ? tw('zinc-500') : tw('zinc-400')}
+        onChangeText={(text) => {
+          const next = text.toUpperCase().slice(0, 2)
+          setDraft(next)
+          settings$.contentCountry.set(/^[A-Z]{2}$/.test(next) ? next : null)
+        }}
+      />
+    </View>
+  )
+}
+
 export const SettingsPreferencesContent = () => {
   const tw = useTwColor()
   const settings = useValue(settings$)
@@ -577,12 +620,38 @@ export const SettingsYouTubeContent = () => {
               value={settings.sponsorBlock}
               onPress={() => settings$.sponsorBlock.set(!settings.sponsorBlock)}
             />
+            {settings.sponsorBlock
+              ? SPONSOR_BLOCK_CATEGORIES.map((category) => (
+                  <SettingsToggleRow
+                    key={category}
+                    label={`Skip ${sponsorCategoryLabel(category)}`}
+                    icon="skip-next"
+                    value={settings.sponsorBlockCategories.includes(category)}
+                    onPress={() => {
+                      const selected = settings.sponsorBlockCategories
+                      settings$.sponsorBlockCategories.set(
+                        selected.includes(category)
+                          ? selected.filter((x) => x !== category)
+                          : [...selected, category],
+                      )
+                    }}
+                  />
+                ))
+              : null}
             <SettingsToggleRow
               label={t('settings.blockAds.label')}
               description={t('settings.blockAds.hint')}
               icon="ad-units"
               value={settings.blockAds}
               onPress={() => settings$.blockAds.set(!settings.blockAds)}
+            />
+            <CountrySettingRow />
+            <SettingsToggleRow
+              label="Open settings on launch"
+              description="Show the settings screen first each time the app starts"
+              icon="tune"
+              value={settings.openSettingsOnLaunch}
+              onPress={() => settings$.openSettingsOnLaunch.set(!settings.openSettingsOnLaunch)}
             />
             <View className="flex-row items-center gap-3 px-4 py-4">
               <View className={iconWrapCls}>

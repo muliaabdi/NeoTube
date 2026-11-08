@@ -26,6 +26,10 @@ import { addSleepTimerListener, getNativeSleepTimerRemainingMs, hasSleepTimerNat
 // filtered.
 let lastHandledDeepLink: string | null = null
 
+// Settings-on-launch runs at most once per JS runtime; the observable outlives
+// this component until MainPage mounts the modal.
+let launchSettingsHandled = false
+
 function openDeepLink(url: string) {
   lastHandledDeepLink = url
   openSharedUrl(url)
@@ -128,6 +132,14 @@ export default function HomeScreen() {
       .then((url) => {
         if (url && url !== lastHandledDeepLink) {
           openDeepLink(url)
+        }
+        if (!launchSettingsHandled) {
+          launchSettingsHandled = true
+          // A share still resolving or a deep link means the user came for
+          // content, not for settings.
+          if (!url && !isResolving && resolvedSharedPayloads.length === 0 && settings$.openSettingsOnLaunch.get()) {
+            ui$.settingsModalOpen.set(true)
+          }
         }
       })
       .catch((error) => {
