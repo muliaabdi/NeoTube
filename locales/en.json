@@ -127,6 +127,8 @@
   "update": {
     "check": "Check for updates",
     "checkHint": "See if a newer version is available",
+    "available": "Update v{{version}} available",
+    "openRelease": "Tap to open the release page",
     "upToDate": "You're on the latest version",
     "downloading": "Downloading update v{{version}}…",
     "error": "Failed to check for updates",

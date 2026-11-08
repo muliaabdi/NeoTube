@@ -4,6 +4,8 @@ import { ui$, updateUrl } from '@/states/ui'
 import { tabs$, type Tab } from '@/states/tabs'
 import { queue$ } from '@/states/queue'
 import { settings$ } from '@/states/settings'
+import { runUpdateCheck } from '@/states/update'
+import { version } from '../../package.json'
 import { bookmarks$, newBookmark } from '@/states/bookmarks'
 import { createLogger } from '@/lib/log'
 import { EmbedVideoModal } from '@/components/modal/EmbedVideoModal'
@@ -309,6 +311,10 @@ const DesktopTabView: React.FC<{
   useObserveEffect(settings$.doubleTapToToggleHeader, () => syncSettingsToWebview())
   useObserveEffect(userStyles$, () => syncUserStylesToWebview())
   useObserveEffect(blocklist$, () => syncBlocklistToWebview())
+  useEffect(() => {
+    // Startup update check; throttled to once a day inside runUpdateCheck.
+    void runUpdateCheck(version)
+  }, [])
   useEffect(() => {
     if (!readyRef.current) return
     executeQuietly(

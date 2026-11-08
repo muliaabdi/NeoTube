@@ -1,9 +1,10 @@
-import { Pressable, ScrollView, View, useColorScheme } from 'react-native'
+import { Linking, Pressable, ScrollView, View, useColorScheme } from 'react-native'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import { clsx, isWeb, nIf } from '@/lib/utils'
 import { useValue } from '@legendapp/state/react'
 import { auth$ } from '@/states/auth'
 import { settings$ } from '@/states/settings'
+import { update$ } from '@/states/update'
 import { t } from 'i18next'
 import { capitalize } from 'es-toolkit'
 import MaterialIcons, { type MaterialIconsIconName } from '@react-native-vector-icons/material-icons'
@@ -169,6 +170,8 @@ export const SettingsTree = forwardRef<
   const [importingTakeout, setImportingTakeout] = useState(false)
   const [updateSupported, setUpdateSupported] = useState(false)
   const [checkingUpdate, setCheckingUpdate] = useState(false)
+  const availableVersion = useValue(update$.availableVersion)
+  const releaseUrl = useValue(update$.releaseUrl)
 
   const currentPage = pageStack[pageStack.length - 1]
   const canGoBack = pageStack.length > 1
@@ -225,7 +228,14 @@ export const SettingsTree = forwardRef<
     try {
       const result = await mainClient.checkForUpdate()
       if (result.status === 'available') {
-        showToast(t('update.downloading', { version: result.version }))
+        update$.availableVersion.set(result.version)
+        if (result.url) {
+          update$.releaseUrl.set(result.url)
+        }
+        showToast(t('update.available', { version: result.version }))
+        if (result.url) {
+          void Linking.openURL(result.url)
+        }
       } else if (result.status === 'error') {
         showToast(result.message || t('update.error'))
       } else {
@@ -378,6 +388,18 @@ export const SettingsTree = forwardRef<
             {updateSupported ? (
               <SettingsSection label={t('about.updates')}>
                 <View className={surfaceCls}>
+                  {availableVersion ? (
+                    <SettingsActionRow
+                      label={t('update.available', { version: availableVersion })}
+                      description={t('update.openRelease')}
+                      icon="new-releases"
+                      onPress={() => {
+                        if (releaseUrl) {
+                          void Linking.openURL(releaseUrl)
+                        }
+                      }}
+                    />
+                  ) : null}
                   <SettingsActionRow
                     label={t('update.check')}
                     description={t('update.checkHint')}

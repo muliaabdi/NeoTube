@@ -443,6 +443,8 @@
   "update": {
     "check": "Periksa pembaruan",
     "checkHint": "Lihat apakah versi yang lebih baru tersedia",
+    "available": "Pembaruan v{{version}} tersedia",
+    "openRelease": "Tap untuk membuka halaman rilis",
     "upToDate": "Anda sudah menggunakan versi terbaru",
     "downloading": "Mengunduh pembaruan v{{version}}…",
     "error": "Gagal memeriksa pembaruan",
