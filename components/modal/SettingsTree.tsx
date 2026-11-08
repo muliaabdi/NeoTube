@@ -5,6 +5,7 @@ import { useValue } from '@legendapp/state/react'
 import { auth$ } from '@/states/auth'
 import { settings$ } from '@/states/settings'
 import { update$ } from '@/states/update'
+import { isUpdateAvailable } from '@/lib/check-update'
 import { t } from 'i18next'
 import { capitalize } from 'es-toolkit'
 import MaterialIcons, { type MaterialIconsIconName } from '@react-native-vector-icons/material-icons'
@@ -388,7 +389,7 @@ export const SettingsTree = forwardRef<
             {updateSupported ? (
               <SettingsSection label={t('about.updates')}>
                 <View className={surfaceCls}>
-                  {availableVersion ? (
+                  {isUpdateAvailable(availableVersion, version) ? (
                     <SettingsActionRow
                       label={t('update.available', { version: availableVersion })}
                       description={t('update.openRelease')}

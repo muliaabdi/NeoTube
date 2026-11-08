@@ -30,6 +30,9 @@ export const compareVersions = (a: string, b: string): number => {
   return isPrerelease(b) ? 1 : 0
 }
 
+export const isUpdateAvailable = (availableVersion: string | null, currentVersion: string) =>
+  availableVersion !== null && compareVersions(availableVersion, currentVersion) > 0
+
 export const fetchLatestRelease = async (fetchFn: typeof fetch): Promise<LatestReleaseResult> => {
   try {
     const res = await fetchFn(RELEASES_LATEST_URL, {

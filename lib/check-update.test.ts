@@ -51,3 +51,21 @@ test('fetchLatestRelease: fetch throw -> error', async () => {
 test('RELEASES_LATEST_URL menunjuk repo yang benar', () => {
   expect(RELEASES_LATEST_URL).toBe('https://api.github.com/repos/muliaabdi/NeoTube/releases/latest')
 })
+
+import { isUpdateAvailable } from './check-update'
+
+test('isUpdateAvailable: null -> false', () => {
+  expect(isUpdateAvailable(null, '1.0.0')).toBe(false)
+})
+
+test('isUpdateAvailable: tersimpan lebih baru -> true', () => {
+  expect(isUpdateAvailable('1.1.0', '1.0.0')).toBe(true)
+})
+
+test('isUpdateAvailable: tersimpan sama dengan terpasang (banner stale) -> false', () => {
+  expect(isUpdateAvailable('1.0.0', '1.0.0')).toBe(false)
+})
+
+test('isUpdateAvailable: tersimpan lebih tua (sideload baru) -> false', () => {
+  expect(isUpdateAvailable('0.9.0', '1.0.0')).toBe(false)
+})
