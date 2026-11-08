@@ -1,77 +1,50 @@
-# Contributing
+# Contributing to NeoTube
 
-Thank you for your interest in contributing to [NouTube](https://github.com/nonbili/NouTube) !
+Thank you for your interest in contributing to NeoTube!
 
-Please read this guide before submitting changes.
+NeoTube is an open-source, mobile-first, distraction-free YouTube and YouTube Music client.
 
-## Before you start
+---
 
-Knowledge of JavaScript/TypeScript, React and ReactNative makes it easier to contribute to the project.
+## Code of Conduct & Principles
 
-## Installation
+1. **Lightweight & Fast:** The best code is the code never written. Keep additions minimal, clean, and well-scoped.
+2. **Privacy First:** Never log, track, or transmit user data without explicit local control.
+3. **Open Standards:** Adhere strictly to AGPLv3 guidelines.
 
-Here you will find instructions to install NouTube.
+---
 
-### Prerequisites
+## Development Workflow
 
-- [bun](https://bun.com/docs/installation)
-- [Android SDK](https://developer.android.com/studio): if you want to build the android app
-- [Expo Go](https://play.google.com/store/apps/details?id=host.exp.exponent): if you want to use Expo Go on your phone
+1. Fork or clone the repository:
+   ```bash
+   git clone https://github.com/muliaabdi/neotube.git
+   cd neotube
+   ```
+2. Install dependencies:
+   ```bash
+   bun install
+   ```
+3. Run tests:
+   ```bash
+   bun test
+   ```
+4. Start Metro bundler:
+   ```bash
+   bun run start
+   ```
 
-### Installing the project
+---
 
-- Clone the project:
+## Pull Request Guidelines
 
-```shell
-git clone https://github.com/nonbili/NouTube.git 
-```
+- Ensure `bun test` passes before submitting.
+- Avoid introducing unnecessary third-party packages if native web APIs or standard libraries suffice.
+- Keep commits concise, following conventional commit formats.
 
-- Install all dependencies:
+---
 
-```shell
-bun install
-```
+## Authors & Contributors
 
-- Build in dev mode:
-
-```shell
-bun dev
-```
-
-- Build the android app:
-
-```shell
-bun android
-```
-
-### Troubleshooting
-
-#### "Failed to resolve the Android SDK path..."
-
-Make sure that you have the android SDK installed and the environment variable set with the SDK location.
-
-```shell
-export ANDROID_HOME=/home/john/Android/sdk
-```
-
-## Pull requests
-
-1. Use a dedicated branch for your work.
-2. Ensure that your code passes the lint check.
-3. Maintainers may request changes before merging.
-
-## Style guidelines
-
-### Commits
-
-Your commits must:
-
-- Be meaningful
-- Refer the issue (if you are fixing an issue)
-
-Example: android(0.4.3): support sponsor block, fix #7
-
-## Labels
-
-Prefix your issues and PRs with labels to indicate their type such as:
-`[bug]`, `[enhancement]`, `[question]` etc...
+- **NeoTube Maintainer:** [muliaabdi](https://github.com/muliaabdi)
+- **Original Project & Inspiration:** [rnons](https://github.com/rnons) and [NouTube contributors](https://github.com/nonbili/NouTube).

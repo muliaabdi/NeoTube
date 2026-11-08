@@ -839,6 +839,7 @@ export const SettingsYouTubeContent = () => {
 export const SettingsAppearanceContent = () => {
   const tw = useTwColor()
   const settings = useValue(settings$)
+  const builtinStyles = useValue(userStyles$.builtins)
   const theme = settings.theme
   // Only four of these ever fit next to the seek bar, so the hint says how many
   // are on rather than letting the extras vanish without explanation.
@@ -912,6 +913,12 @@ export const SettingsAppearanceContent = () => {
               icon="vertical-align-top"
               value={settings.hideToolbarWhenScrolled}
               onPress={() => settings$.hideToolbarWhenScrolled.set(!settings.hideToolbarWhenScrolled)}
+            />
+            <SettingsToggleRow
+              label={t('settings.userStyles.builtin.verticalNavbar.label')}
+              icon="view-sidebar"
+              value={Boolean(builtinStyles['vertical-navbar']?.enabled)}
+              onPress={() => userStyles$.setBuiltinEnabled('vertical-navbar', !builtinStyles['vertical-navbar']?.enabled)}
               isLast
             />
           </View>
@@ -1272,7 +1279,7 @@ export const SettingsTransferContent: React.FC<{
   }
 
   const onClickExportList = async () => {
-    const filename = `NouTube_bookmarks_${Date.now()}.csv`
+    const filename = `NeoTube_bookmarks_${Date.now()}.csv`
     await saveFile(filename, exportBookmarksCsv())
   }
 
@@ -1370,7 +1377,7 @@ export const SettingsTransferContent: React.FC<{
         <View className={surfaceCls}>
           <SettingsActionRow
             label={t('settings.importList')}
-            description="Plain text, copied links, or a NouTube CSV export"
+            description="Plain text, copied links, or a NeoTube CSV export"
             icon="playlist-add"
             onPress={() => {
               void onClickImportList()

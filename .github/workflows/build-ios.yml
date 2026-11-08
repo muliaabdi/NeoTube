@@ -1,0 +1,71 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-ios:
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          bun link
+          bun install --frozen-lockfile
+          bun run bundle
+
+      - name: Prebuild iOS project
+        run: |
+          bunx expo prebuild --platform ios --clean --no-install
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Build unsigned .app via xcodebuild
+        run: |
+          cd ios
+          xcodebuild -workspace NeoTube.xcworkspace \
+            -scheme NeoTube \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package .app into .ipa for sideloading
+        run: |
+          mkdir -p build-ipa/Payload
+          APP_PATH=$(find ios/build -name "*.app" -type d | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "NeoTube.app" -type d | head -n 1)
+          fi
+          echo "Found app at: $APP_PATH"
+          cp -R "$APP_PATH" build-ipa/Payload/
+          cd build-ipa
+          zip -r NeoTube.ipa Payload
+          mv NeoTube.ipa ../NeoTube.ipa
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NeoTube-iOS-IPA
+          path: NeoTube.ipa
+          retention-days: 14

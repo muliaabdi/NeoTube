@@ -31,7 +31,7 @@ let pendingPlayerUrl = ''
 let playerLoadToken = 0
 
 export function isSplitWatchEnabled() {
-  return isAndroid && settings$.miniPlayer.get()
+  return isAndroid && (settings$.miniPlayer.get() ?? true)
 }
 
 export function isShortsUrl(url: string) {

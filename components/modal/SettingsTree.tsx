@@ -304,29 +304,12 @@ export const SettingsTree = forwardRef<
             <SettingsSection label={t('settings.tools')}>
               <View className={surfaceCls}>
                 <SettingsNavRow
-                  title={t('sync.label')}
-                  description={user?.email || t('settings.syncHintShort')}
-                  icon="sync"
-                  meta={formatPlanLabel(plan)}
-                  onPress={() => pushPage('sync')}
-                />
-                <SettingsNavRow
                   title={t('settings.transfer')}
                   description={t('settings.transferHint')}
                   icon="import-export"
                   onPress={() => pushPage('transfer')}
-                  isLast={!showShellTools}
+                  isLast
                 />
-                {nIf(
-                  showShellTools,
-                  <SettingsNavRow
-                    title={t('settings.tools')}
-                    description={t('settings.toolsHint')}
-                    icon="build"
-                    onPress={() => pushPage('tools')}
-                    isLast
-                  />,
-                )}
               </View>
             </SettingsSection>
 
@@ -338,12 +321,6 @@ export const SettingsTree = forwardRef<
                   icon="info-outline"
                   meta={`v${version}`}
                   onPress={() => pushPage('about')}
-                />
-                <SettingsNavRow
-                  title={t('changelog.label')}
-                  description={t('changelog.hint')}
-                  icon="history"
-                  onPress={() => pushPage('changelog')}
                   isLast
                 />
               </View>
@@ -390,9 +367,12 @@ export const SettingsTree = forwardRef<
           <View className="gap-6">
             <View className="rounded-[28px] bg-white dark:bg-zinc-900 px-5 py-5">
               <NouText className="text-[11px] uppercase tracking-[0.18em] text-zinc-600 dark:text-zinc-500">
-                NouTube
+                NeoTube
               </NouText>
               <NouText className="mt-2 text-xl font-semibold tracking-tight">v{version}</NouText>
+              <NouText className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                {t('about.description')}
+              </NouText>
             </View>
 
             {updateSupported ? (
@@ -409,38 +389,6 @@ export const SettingsTree = forwardRef<
                 </View>
               </SettingsSection>
             ) : null}
-
-            <SettingsSection label={t('about.help')}>
-              <View className={surfaceCls}>
-                <SettingsExternalRow
-                  title={t('about.faq')}
-                  detail={t('about.faqHint')}
-                  href={FAQ_URL}
-                  icon="help-outline"
-                  isLast
-                />
-              </View>
-            </SettingsSection>
-
-            <SettingsSection label={t('about.code')}>
-              <View className={surfaceCls}>
-                <SettingsExternalRow title="GitHub" detail="github.com/nonbili/NouTube" href={repo} icon="code" isLast />
-              </View>
-            </SettingsSection>
-
-            <SettingsSection label={t('about.donate')}>
-              <View className={surfaceCls}>
-                {donateLinks.map((item, index) => (
-                  <SettingsExternalRow
-                    key={item.url}
-                    title={item.label}
-                    detail={item.detail}
-                    href={item.url}
-                    isLast={index === donateLinks.length - 1}
-                  />
-                ))}
-              </View>
-            </SettingsSection>
           </View>
         )
 

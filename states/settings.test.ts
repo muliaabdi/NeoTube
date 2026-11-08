@@ -159,4 +159,15 @@ describe('settings', () => {
     const settings = normalizeSettings<Partial<SettingsSnapshot>>({ miniPlayerPosition: { x: 2, y: -1 } })
     expect(settings?.miniPlayerPosition).toEqual({ x: 1, y: 0 })
   })
+
+  it('defaults every navbar button on', () => {
+    const snapshot = getSettingsSnapshot({})
+    expect(snapshot.showBackButtonInHeader).toBe(true)
+    expect(snapshot.showForwardButtonInHeader).toBe(true)
+    expect(snapshot.showReloadButtonInHeader).toBe(true)
+    expect(snapshot.showHomeButtonInHeader).toBe(true)
+    expect(snapshot.showHistoryButtonInHeader).toBe(true)
+    expect(snapshot.showLibraryButtonInHeader).toBe(true)
+    expect(snapshot.showStarButtonInHeader).toBe(true)
+  })
 })

@@ -3,7 +3,7 @@ import { PanResponder, Pressable, StyleSheet, View, type LayoutChangeEvent } fro
 import { useValue } from '@legendapp/state/react'
 import MaterialIcons from '@react-native-vector-icons/material-icons'
 import { settings$ } from '@/states/settings'
-import { closePlayer, showPlayer } from '@/lib/split-view'
+import { closePlayer, hidePlayer, showPlayer } from '@/lib/split-view'
 
 const MARGIN = 12
 const MAX_WIDTH = 260
@@ -96,6 +96,23 @@ export const PlayerFrame: React.FC<{
     [base, rangeX, rangeY, isMini],
   )
 
+  // When player is full, handle downward swipe to collapse to mini
+  const fullPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponderCapture: (_evt, gesture) => {
+          // Detect clear downward swipe: vertical delta > 25 and more vertical than horizontal
+          return isFull && gesture.dy > 25 && gesture.dy > Math.abs(gesture.dx) * 1.5
+        },
+        onPanResponderRelease: (_evt, gesture) => {
+          if (gesture.dy > 40) {
+            hidePlayer()
+          }
+        },
+      }),
+    [isFull],
+  )
+
   const onLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout
     setArea((current) => (current.width === width && current.height === height ? current : { width, height }))
@@ -127,6 +144,7 @@ export const PlayerFrame: React.FC<{
       style={StyleSheet.absoluteFill}
       pointerEvents={isFull ? 'auto' : isMini ? 'box-none' : 'none'}
       onLayout={onLayout}
+      {...(isFull ? fullPanResponder.panHandlers : {})}
     >
       <View ref={frameRef} style={frameStyle} {...(isMini ? panResponder.panHandlers : {})}>
         {children}

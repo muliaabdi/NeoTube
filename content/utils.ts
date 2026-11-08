@@ -23,20 +23,30 @@ export function parseJson(v: string | null, fallback: any) {
 }
 
 // Trusted Types is Chromium-only, so WebKit (the iOS webview, Safari) has no
-// window.trustedTypes at all. It is only ever used to satisfy the policy the
-// page enforces, and the createHTML below is the identity function, so falling
-// back to it directly is equivalent everywhere it is missing.
-export const nouPolicy = window.trustedTypes
-  ? window.trustedTypes.createPolicy('nouPolicy', {
-      createHTML: (x: string) => x,
-    })
-  : { createHTML: (x: string) => x }
+// window.trustedTypes at all. The policy is resolved on first use, not at
+// import time, so test runners without a DOM can load this module; the
+// createHTML below is the identity function, so falling back to it directly
+// is equivalent everywhere it is missing.
+const identityCreateHTML = (x: string) => x
+let resolvedPolicy: { createHTML: (x: string) => string } | undefined
+const getPolicy = () => {
+  if (!resolvedPolicy) {
+    resolvedPolicy = window.trustedTypes
+      ? window.trustedTypes.createPolicy('nouPolicy', { createHTML: identityCreateHTML as any })
+      : { createHTML: identityCreateHTML }
+  }
+  return resolvedPolicy
+}
+export const nouPolicy = {
+  createHTML: (x: string) => getPolicy().createHTML(x),
+}
 
-export const isYTMusic = document.location.host == 'music.youtube.com'
+export const isYTMusic = typeof document != 'undefined' && document.location.host == 'music.youtube.com'
 
 // The embedded player as an iframe on somebody else's page. The app's own embed
 // modal loads the same url as a top-level document and is not one of these.
-export const isEmbedFrame = window !== window.top && document.location.pathname.startsWith('/embed/')
+export const isEmbedFrame =
+  typeof window != 'undefined' && window !== window.top && document.location.pathname.startsWith('/embed/')
 
 // localStorage with an in-memory fallback. A cross-site frame (the embedded
 // player on another site) can be denied storage altogether, and there merely

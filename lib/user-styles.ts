@@ -3,6 +3,7 @@ export const USER_STYLES_SCHEMA_VERSION = 5
 export const builtinUserStyleIds = [
   'hide-mix-playlist',
   'hide-shorts-navbar',
+  'vertical-navbar',
   'hide-community-posts',
   'hide-ask-button',
   'hide-home-feed',
@@ -88,6 +89,45 @@ export const builtinUserStyleDefinitions: BuiltinUserStyleDefinition[] = [
     `,
   },
   {
+    id: 'vertical-navbar',
+    labelKey: 'settings.userStyles.builtin.verticalNavbar.label',
+    css: css`
+      ytm-pivot-bar-renderer {
+        position: fixed !important;
+        top: 50% !important;
+        right: 0 !important;
+        bottom: auto !important;
+        left: auto !important;
+        transform: translateY(-50%) !important;
+        width: 56px !important;
+        height: auto !important;
+        flex-direction: column !important;
+        border-radius: 20px 0 0 20px !important;
+        background: rgba(18, 18, 18, 0.9) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        box-shadow: -4px 0 16px rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-right: none !important;
+        padding: 6px 0 !important;
+        z-index: 9999 !important;
+      }
+      ytm-pivot-bar-item-renderer {
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 56px !important;
+        height: 52px !important;
+        padding: 4px 0 !important;
+      }
+      .pivot-bar-item-title {
+        font-size: 9px !important;
+        transform: scale(0.9) !important;
+        margin-top: 2px !important;
+      }
+    `,
+  },
+  {
     id: 'hide-community-posts',
     labelKey: 'settings.userStyles.builtin.hideCommunityPosts.label',
     css: css`
@@ -161,6 +201,7 @@ export const builtinUserStyleDefinitionById = builtinUserStyleDefinitions.reduce
 export const createDefaultBuiltinUserStyles = (): Record<BuiltinUserStyleId, BuiltinUserStyleState> => ({
   'hide-mix-playlist': { enabled: false },
   'hide-shorts-navbar': { enabled: false },
+  'vertical-navbar': { enabled: true },
   'hide-community-posts': { enabled: false },
   'hide-ask-button': { enabled: false },
   'hide-home-feed': { enabled: false },

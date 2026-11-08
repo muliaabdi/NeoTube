@@ -2,6 +2,7 @@ import { emit } from './utils'
 import { isWatchUrl } from '../lib/split-watch-url'
 import { installSplitPlayerWindow } from './split-player-window'
 import { findSplitLink } from './split-link'
+import { isSwipeDownToMini } from './swipe-gesture'
 
 // Page half of the split watch view (see lib/split-view.ts). Two webviews are
 // live at once and each one only handles the pages it owns, so every link that
@@ -471,6 +472,56 @@ function installMiniplayerGuard() {
   }
 }
 
+// Recognizes a swipe down on the player area to collapse it into the native mini player
+function installSwipeDownToMini() {
+  let startX = 0
+  let startY = 0
+  let startTime = 0
+
+  window.addEventListener(
+    'touchstart',
+    (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        const touch = e.touches[0]
+        startX = touch.clientX
+        startY = touch.clientY
+        startTime = Date.now()
+      }
+    },
+    { passive: true, capture: true },
+  )
+
+  window.addEventListener(
+    'touchend',
+    (e: TouchEvent) => {
+      if (e.changedTouches.length === 1 && startTime > 0) {
+        const touch = e.changedTouches[0]
+        const deltaX = touch.clientX - startX
+        const deltaY = touch.clientY - startY
+        const timeMs = Date.now() - startTime
+        startTime = 0
+
+        // In fullscreen mode, don't interfere with fullscreen gestures
+        if (document.fullscreenElement || (document as any).webkitFullscreenElement) {
+          return
+        }
+
+        if (
+          isSwipeDownToMini({
+            startY,
+            deltaX,
+            deltaY,
+            timeMs,
+          })
+        ) {
+          emit('swipe-to-mini')
+        }
+      }
+    },
+    { passive: true, capture: true },
+  )
+}
+
 export function installSplitView() {
   const current = role()
   if (!current || location.host === 'music.youtube.com') {
@@ -490,6 +541,7 @@ export function installSplitView() {
   if (current === 'player') {
     installSplitPlayerWindow()
     installPlayerHistoryCollapse()
+    installSwipeDownToMini()
     // Feed previews in the preloaded shell must stay silent. Wait for the
     // root at document start, and cancel if a video was requested meanwhile.
     const muteWarmup = () => {

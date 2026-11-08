@@ -1,4 +1,4 @@
-import { nouStorage } from './utils'
+import { emit, nouStorage } from './utils'
 
 export interface Segment {
   // https://wiki.sponsor.ajay.app/w/Types#Category
@@ -119,6 +119,11 @@ export function clearSkipSegments() {
 export function renderSkipSegments(videoId: string, segments: Segment[], duration: number) {
   if (!videoId || !duration || !Number.isFinite(duration)) {
     return
+  }
+
+  const bars = getProgressBars()
+  if (segments.length > 0) {
+    emit('log', `[sponsorblock] found ${segments.length} segments for ${videoId}, progress bars found: ${bars.length}`)
   }
 
   const segmentKey = segments

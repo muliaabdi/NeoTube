@@ -1,67 +1,65 @@
-# <img src="desktop/icon.png" align="top" height="44"> NouTube
+# <img src="assets/images/icon.png" align="top" height="44"> NeoTube
 
-Android, iOS, and Desktop app for YouTube and YouTube Music.
+A clean, distraction-free YouTube and YouTube Music client for mobile (Android & iOS).
 
-Install from F-Droid, or download APK from GitHub.
+Forked from [NouTube](https://github.com/nonbili/NouTube) under the AGPLv3 license with a focus on modern mobile and tablet experience.
 
-[<img src="https://img.shields.io/badge/F--Droid-1976D2?style=for-the-badge&logo=f-droid"
-    alt="Get it on F-Droid"
-    height="80">](https://f-droid.org/packages/jp.nonbili.noutube)
-[<img src="https://img.shields.io/badge/GitHub%20Releases-100000?style=for-the-badge&logo=github"
-      alt="Get it on GitHub"
-      hspace="16"
-      height="50">](https://github.com/nonbili/NouTube/releases/latest)
-[<img src="https://img.shields.io/badge/TestFlight-0D96F6?style=for-the-badge&logo=appstore&logoColor=white"
-    alt="Join the iOS beta on TestFlight"
-    height="50">](https://testflight.apple.com/join/kkUdF2hV)
+---
 
-Find Linux, macOS, Windows versions in [NouTube-Desktop](https://github.com/nonbili/NouTube-Desktop).
+## Highlights & Features
 
-Or use the browser extension on Firefox and Chrome.
+- **Ad-Free Playback:** Native ad blocking directly inside the webview.
+- **Background & Lock Screen Playback:** Keeps playing when minimized or when the screen is locked.
+- **Native Miniplayer:** Collapse any playing video to a floating miniplayer with a simple swipe down gesture.
+- **Customizable Layout:**
+  - Vertical right-hand sidebar navigation toggle for tablets and large screens.
+  - Optional hidden top navigation toolbar.
+  - Distraction-free controls (hide Shorts, hide community posts, hide mix playlists).
+- **Integrated SponsorBlock:** Automatically skips sponsors, intros, self-promos, and interaction reminders.
+- **Privacy First:**
+  - Manage library, bookmarks, and watch history locally without logging in to Google.
+  - Local settings persistence with MMKV.
+- **Clean Landing Screen:** Quick launcher for YouTube and customizable settings.
 
-[<img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white"
-    alt="Get it on Firefox Add-ons"
-    height="50">](https://addons.mozilla.org/addon/noutube/)
-[<img src="https://img.shields.io/badge/Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white"
-      alt="Get it on Chrome Web Store"
-      hspace="16"
-      height="50">](https://chromewebstore.google.com/detail/noutube/cpmippodfdmialcoaegbbmhpdamodoif)
+---
 
-## Features
+## Tech Stack
 
-- No ads
-- Plays in the background
-- Manage video/music library without login
-- Manage watch history without login
-- Download video
-- RSS feed reader for YouTube channels
-- Hide shorts
-- Live chat
-- Play original audio
-- Customize with CSS
+- **Framework:** React Native (New Architecture / Bridgeless) with Expo SDK 54
+- **State Management:** `@legendapp/state` with MMKV persistence
+- **Styling:** NativeWind (Tailwind CSS) & dynamic system color theme
+- **Runtime & Tools:** Bun & Node.js
 
-## How it works
+---
 
-- Wrap https://m.youtube.com and https://music.youtube.com in Android webview
-- Inject code to block ads
-- Hook playback controls and support playing in background
+## Development & Building
 
-## Screenshots
+### Prerequisites
 
-<img src="metadata/en-US/images/phoneScreenshots/1.jpg" width="240" alt="Ad-free playback"> <img src="metadata/en-US/images/phoneScreenshots/2.jpg" width="240" alt="Background playback"> <img src="metadata/en-US/images/phoneScreenshots/3.jpg" width="240" alt="Channel feeds">
+- [Bun](https://bun.sh/)
+- Android SDK (for Android builds)
+- Node.js 20+
 
-<img src="metadata/en-US/images/phoneScreenshots/4.jpg" width="240" alt="Distraction controls"> <img src="metadata/en-US/images/phoneScreenshots/5.jpg" width="240" alt="Content filters"> <img src="metadata/en-US/images/phoneScreenshots/6.jpg" width="240" alt="Playback controls">
+### Setup
 
-[Android and iOS store screenshots](metadata/en-US/screenshots/README.md)
+```bash
+# Install dependencies
+bun install
 
-## Contributing
+# Start development Metro bundler
+bun run start
+```
 
-You can find [contributing instructions here](/CONTRIBUTING.md)
+### Android Build
 
-## Translation
+```bash
+# Build standalone debug APK
+cd android && ./gradlew assembleFullDebug
+```
 
-Translation is supported by [Weblate](https://hosted.weblate.org/projects/noutube).
+---
 
-## Note
+## License
 
-We're not affiliated with any .org websites.
+This project is licensed under the [GNU Affero General Public License v3.0 (AGPLv3)](./LICENSE).  
+Original work copyright (C) rnons / NouTube contributors. Modifications and enhancements copyright (C) NeoTube contributors.

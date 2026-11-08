@@ -20,6 +20,7 @@ import { NouHeader } from '../header/NouHeader'
 import { WebviewContainer } from './webview-container'
 import { PageLoadError } from './PageLoadError'
 import { syncSupabase } from '@/lib/supabase/sync'
+import { getContentSettingsSnapshot } from '@/lib/content-settings'
 import { auth$ } from '@/states/auth'
 import { useMe } from '@/lib/hooks/useMe'
 import { ObservableHint } from '@legendapp/state'
@@ -37,7 +38,7 @@ import { history$ } from '@/states/history'
 import { buildUserScriptSources, userScriptsInvalidationSource } from '@/lib/user-styles'
 import { getUserStylesSnapshot, userStyles$ } from '@/states/user-styles'
 import { blocklist$, getBlocklistSnapshot } from '@/states/blocklist'
-import { addSystemCaptionStyleListener, getSystemCaptionStyle } from '@/lib/system-captions'
+import { addSystemCaptionStyleListener } from '@/lib/system-captions'
 import { addSystemDesktopModeListener, getSystemDesktopMode } from '@/lib/desktop-mode'
 import { addPictureInPictureListener } from '@/lib/picture-in-picture'
 import { useDesktopMode } from '@/lib/hooks/useDesktopMode'
@@ -113,44 +114,6 @@ const executeQuietly = (webview: WebviewTag | null, script: string) => {
  * the links the other half owns (see content/split-view.ts). */
 const splitRolePrelude = (enabled: boolean, role: 'browse' | 'player', mini = false) =>
   enabled ? `window.NouTubeRole = ${JSON.stringify(role)};window.NouTubeNativeMini = ${mini};` : ''
-
-const getContentSettingsSnapshot = () => {
-  const {
-    sponsorBlock,
-    sponsorBlockCategories,
-    contentCountry,
-    blockAds,
-    playbackRate,
-    playbackQuality,
-    disableAutoplay,
-    miniPlayer,
-    pictureInPicture,
-    showDislikes,
-    showOriginalVideoTitle,
-    doubleTapToToggleHeader,
-    translateComments,
-    translationTargetLanguage,
-    replaceWatchNavigation,
-    useSystemCaptionStyle,
-  } = settings$.get()
-  return {
-    sponsorBlock,
-    sponsorBlockCategories,
-    contentCountry,
-    blockAds,
-    playbackRate,
-    playbackQuality,
-    disableAutoplay,
-    miniPlayer,
-    pictureInPicture,
-    showDislikes,
-    showOriginalVideoTitle,
-    doubleTapToToggleHeader,
-    translateComments: !isWeb && translateComments && Boolean(translationTargetLanguage),
-    replaceWatchNavigation,
-    captionStyle: useSystemCaptionStyle ? getSystemCaptionStyle() : null,
-  }
-}
 
 const DesktopTabView: React.FC<{
   tab: Tab
@@ -382,7 +345,8 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
   const currentPageUrl = isWeb ? activePageUrl : pageUrl
   const nativeRef = useRef<typeof NouTubeViewModule>(null)
   const playerRef = useRef<typeof NouTubeViewModule>(null)
-  const splitWatchView = useValue(settings$.miniPlayer) && isAndroid
+  // Mobile always supports split watch view for seamless background/mini playback
+  const splitWatchView = (useValue(settings$.miniPlayer) ?? true) && isAndroid
   const showHeader = useValue(settings$.showHeader)
   const playerUrl = useValue(ui$.playerUrl)
   const playerMode = useValue(ui$.playerMode)
@@ -666,6 +630,20 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
             })
           }
           break
+        case 'swipe-to-mini':
+          if (isSplitWatchEnabled() && ui$.playerMode.get() === 'full') {
+            hidePlayer()
+          }
+          break
+        case 'navbar-action':
+          if (data?.action === 'history') {
+            ui$.historyModalOpen.set(true)
+          } else if (data?.action === 'library') {
+            ui$.libraryModalOpen.set(true)
+          } else if (data?.action === 'settings') {
+            ui$.settingsModalOpen.set(true)
+          }
+          break
         case 'open-watch':
           // A video link tapped in the browsing webview: the player takes it.
           if (isSplitWatchEnabled() && typeof data?.url === 'string' && isWatchUrl(data.url)) {
@@ -850,6 +828,10 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
   }, [])
 
   useEffect(() => {
+    // Ensure miniPlayer is always enabled on mobile
+    if (!settings$.miniPlayer.peek()) {
+      settings$.miniPlayer.set(true)
+    }
     const webview = nativeRef.current
     if (webview) {
       setBrowseWebview(webview)
@@ -991,6 +973,14 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
   useObserveEffect(settings$.useSystemCaptionStyle, () => syncSettingsToWebview())
   useObserveEffect(settings$.sponsorBlockCategories, () => syncSettingsToWebview())
   useObserveEffect(settings$.contentCountry, () => syncSettingsToWebview())
+  // Navbar buttons live in the page; a toggle has to reach it without a reload.
+  useObserveEffect(settings$.showBackButtonInHeader, () => syncSettingsToWebview())
+  useObserveEffect(settings$.showForwardButtonInHeader, () => syncSettingsToWebview())
+  useObserveEffect(settings$.showReloadButtonInHeader, () => syncSettingsToWebview())
+  useObserveEffect(settings$.showHomeButtonInHeader, () => syncSettingsToWebview())
+  useObserveEffect(settings$.showHistoryButtonInHeader, () => syncSettingsToWebview())
+  useObserveEffect(settings$.showLibraryButtonInHeader, () => syncSettingsToWebview())
+  useObserveEffect(settings$.showStarButtonInHeader, () => syncSettingsToWebview())
 
   // Track whether Android runs us on a desktop-class screen. The manual
   // desktop-site override only lasts for one such session, so drop it whenever

@@ -146,19 +146,19 @@ export const normalizeSettings = <T extends Partial<SettingsSnapshot> | undefine
     data.headerPosition = 'top'
   }
   if (typeof data.showHomeButtonInHeader !== 'boolean') {
-    data.showHomeButtonInHeader = false
+    data.showHomeButtonInHeader = true
   }
   if (typeof data.showHistoryButtonInHeader !== 'boolean') {
-    data.showHistoryButtonInHeader = false
+    data.showHistoryButtonInHeader = true
   }
   if (typeof data.showBackButtonInHeader !== 'boolean') {
-    data.showBackButtonInHeader = false
+    data.showBackButtonInHeader = true
   }
   if (typeof data.showForwardButtonInHeader !== 'boolean') {
-    data.showForwardButtonInHeader = false
+    data.showForwardButtonInHeader = true
   }
   if (typeof data.showReloadButtonInHeader !== 'boolean') {
-    data.showReloadButtonInHeader = false
+    data.showReloadButtonInHeader = true
   }
   if (typeof data.playbackQuality !== 'string') {
     data.playbackQuality = 'auto'
@@ -238,7 +238,7 @@ export const normalizeSettings = <T extends Partial<SettingsSnapshot> | undefine
     data.replaceWatchNavigation = false
   }
   if (typeof data.miniPlayer !== 'boolean') {
-    data.miniPlayer = false
+    data.miniPlayer = true
   }
   // PlayerFrame reads this one straight out of the store and does arithmetic
   // on it, so anything unexpected has to be replaced, not defaulted.
@@ -287,7 +287,8 @@ export const getSettingsSnapshot = (value: Partial<Store> | undefined = settings
   keepHistory: typeof value?.keepHistory === 'boolean' ? value.keepHistory : true,
   replaceWatchNavigation: Boolean(value?.replaceWatchNavigation),
   forceLandscape: value?.forceLandscape === true,
-  miniPlayer: typeof value?.miniPlayer === 'boolean' ? value.miniPlayer : false,
+  // Force miniPlayer on mobile by default if not set or if migrating from legacy false
+  miniPlayer: value?.miniPlayer ?? true,
   miniPlayerPosition: getMiniPlayerPosition(value),
   pictureInPicture: Boolean(value?.pictureInPicture),
   preferH264: Boolean(value?.preferH264),
@@ -309,11 +310,16 @@ export const getSettingsSnapshot = (value: Partial<Store> | undefined = settings
   showDislikes: Boolean(value?.showDislikes),
   showOriginalVideoTitle: Boolean(value?.showOriginalVideoTitle),
   useSystemCaptionStyle: Boolean(value?.useSystemCaptionStyle),
-  showBackButtonInHeader: Boolean(value?.showBackButtonInHeader),
-  showForwardButtonInHeader: Boolean(value?.showForwardButtonInHeader),
-  showHomeButtonInHeader: Boolean(value?.showHomeButtonInHeader),
-  showHistoryButtonInHeader: Boolean(value?.showHistoryButtonInHeader),
-  showReloadButtonInHeader: Boolean(value?.showReloadButtonInHeader),
+  showBackButtonInHeader:
+    typeof value?.showBackButtonInHeader === 'boolean' ? value.showBackButtonInHeader : true,
+  showForwardButtonInHeader:
+    typeof value?.showForwardButtonInHeader === 'boolean' ? value.showForwardButtonInHeader : true,
+  showHomeButtonInHeader:
+    typeof value?.showHomeButtonInHeader === 'boolean' ? value.showHomeButtonInHeader : true,
+  showHistoryButtonInHeader:
+    typeof value?.showHistoryButtonInHeader === 'boolean' ? value.showHistoryButtonInHeader : true,
+  showReloadButtonInHeader:
+    typeof value?.showReloadButtonInHeader === 'boolean' ? value.showReloadButtonInHeader : true,
   showPlaybackSpeedControl: Boolean(value?.showPlaybackSpeedControl),
   showPlaybackQualityControl: Boolean(value?.showPlaybackQualityControl),
   showSleepTimerButtonInHeader: Boolean(value?.showSleepTimerButtonInHeader),
@@ -365,7 +371,7 @@ export const settings$ = observable<Store>({
   keepHistory: true,
   replaceWatchNavigation: false,
   forceLandscape: false,
-  miniPlayer: false,
+  miniPlayer: true,
   miniPlayerPosition: { x: 1, y: 1 },
   pictureInPicture: false,
   preferH264: false,
@@ -385,11 +391,11 @@ export const settings$ = observable<Store>({
   showDislikes: false,
   showOriginalVideoTitle: false,
   useSystemCaptionStyle: false,
-  showBackButtonInHeader: false,
-  showForwardButtonInHeader: false,
-  showHomeButtonInHeader: false,
-  showHistoryButtonInHeader: false,
-  showReloadButtonInHeader: false,
+  showBackButtonInHeader: true,
+  showForwardButtonInHeader: true,
+  showHomeButtonInHeader: true,
+  showHistoryButtonInHeader: true,
+  showReloadButtonInHeader: true,
   showPlaybackSpeedControl: false,
   showPlaybackQualityControl: false,
   showSleepTimerButtonInHeader: false,

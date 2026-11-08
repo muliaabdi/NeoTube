@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import MaterialIcons from '@react-native-vector-icons/material-icons'
 import { Image } from 'expo-image'
 import { useValue } from '@legendapp/state/react'
+import { t } from 'i18next'
 import { NouText } from '../NouText'
 import { ui$ } from '@/states/ui'
 import { settings$ } from '@/states/settings'
@@ -114,7 +115,7 @@ export const LandingScreen = () => {
     return null
   }
 
-  const sbText = sponsorBlock ? 'SponsorBlock aktif' : 'SponsorBlock nonaktif'
+  const sbText = sponsorBlock ? t('landing.sbActive') : t('landing.sbInactive')
 
   return (
     <View className="absolute inset-0 z-50 bg-zinc-50 dark:bg-zinc-950">
@@ -129,17 +130,17 @@ export const LandingScreen = () => {
             />
           </View>
           <NouText className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            NouTube
+            NeoTube
           </NouText>
           <NouText className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            YouTube murni tanpa gangguan
+            {t('landing.tagline')}
           </NouText>
         </View>
 
         {/* Action cluster: centered, tablet-friendly */}
         <View className={`w-full items-center gap-3 ${isTablet ? 'px-12' : ''}`}>
           <PrimaryLaunchCard
-            label="Buka YouTube"
+            label={t('landing.openYouTube')}
             sublabel={sbText}
             country={country}
             onPress={() => ui$.landingVisible.set(false)}
@@ -147,8 +148,8 @@ export const LandingScreen = () => {
 
           <SecondaryLaunchCard
             icon="tune"
-            label="Pengaturan"
-            sublabel="SponsorBlock, negara, tampilan"
+            label={t('landing.settings')}
+            sublabel={t('landing.settingsHint')}
             onPress={() => {
               ui$.landingVisible.set(false)
               ui$.settingsModalOpen.set(true)
@@ -159,7 +160,7 @@ export const LandingScreen = () => {
         {/* Quiet footer */}
         <View className="items-center pb-2">
           <NouText className="text-xs text-zinc-400 dark:text-zinc-600">
-            Tekan kembali kapan saja untuk membuka menu ini
+            {t('landing.backHint')}
           </NouText>
         </View>
       </SafeAreaView>

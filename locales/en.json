@@ -7,7 +7,17 @@
     "code": "Source code",
     "donate": "Donate",
     "updates": "Updates",
-    "hint": "Version info, updates, source code, and support links."
+    "hint": "Version info, updates, source code, and support links.",
+    "description": "Clean YouTube experience without ads, featuring background playback, miniplayer, and SponsorBlock integration."
+  },
+  "landing": {
+    "tagline": "Pure YouTube without distractions",
+    "openYouTube": "Open YouTube",
+    "sbActive": "SponsorBlock active",
+    "sbInactive": "SponsorBlock inactive",
+    "settings": "Settings",
+    "settingsHint": "SponsorBlock, country, appearance",
+    "backHint": "Press back anytime to return to this screen"
   },
   "changelog": {
     "label": "Changelog",
@@ -197,7 +207,7 @@
       "defaultHint": "Adjust the text size of YouTube web pages."
     },
     "appearance": "Appearance",
-    "appearanceHint": "Toolbar, language, and theme.",
+    "appearanceHint": "Navbar, language, and theme.",
     "tools": "Tools",
     "toolsHint": "Manage the webview environment and other tools.",
     "transfer": "Import & export",
@@ -236,15 +246,15 @@
       "top": "Top",
       "bottom": "Bottom"
     },
-    "toolbarButtons": "Toolbar buttons",
-    "showHomeButtonInHeader": "Show Home button in toolbar",
-    "showBackButtonInHeader": "Show Back button in toolbar",
-    "showForwardButtonInHeader": "Show Forward button in toolbar",
-    "showReloadButtonInHeader": "Show Reload button in toolbar",
-    "showHistoryButtonInHeader": "Show History button in toolbar",
+    "toolbarButtons": "Navbar buttons",
+    "showHomeButtonInHeader": "Show Home button in navbar",
+    "showBackButtonInHeader": "Show Back button in navbar",
+    "showForwardButtonInHeader": "Show Forward button in navbar",
+    "showReloadButtonInHeader": "Show Reload button in navbar",
+    "showHistoryButtonInHeader": "Show History button in navbar",
     "showSleepTimerButtonInHeader": "Show Sleep timer button in toolbar",
-    "showLibraryButtonInHeader": "Show Library button in toolbar",
-    "showStarButtonInHeader": "Show Star button in toolbar",
+    "showLibraryButtonInHeader": "Show Library button in navbar",
+    "showStarButtonInHeader": "Show Star button in navbar",
     "mediaNotificationButtons": "Media notification buttons",
     "showMediaNotificationPrevButton": "Show Previous button",
     "showMediaNotificationNextButton": "Show Next button",
@@ -316,6 +326,9 @@
       "builtin": {
         "hideShortsInNavbar": {
           "label": "Hide Shorts in navbar"
+        },
+        "verticalNavbar": {
+          "label": "Vertical navbar on right"
         },
         "hideMixPlaylist": {
           "label": "Hide mix playlist"
@@ -417,7 +430,7 @@
     "importTakeout": "Import from YouTube takeout",
     "exportLabel": "Export bookmarks to a CSV file",
     "importSettings": "Import settings",
-    "importSettingsDescription": "Restore settings from a NouTube settings file",
+    "importSettingsDescription": "Restore settings from a NeoTube settings file",
     "importSettingsConfirm": "This replaces your current settings, blocklist, user styles and custom scripts. Continue?",
     "importSettingsWithScriptsConfirm": "This file contains {{count}} enabled custom script(s), which can run code inside YouTube. Only continue if you trust the file. Your current settings, blocklist, user styles and custom scripts will be replaced.",
     "importSettingsDone": "Imported: {{sections}}",
@@ -430,11 +443,11 @@
     "cookieFaq": "How to inject cookies",
     "injectCookieAction": "Inject cookie",
     "groupYouTube": "YouTube",
-    "groupNouTube": "NouTube",
+    "groupNouTube": "NeoTube",
     "preferencesComments": "Comments",
     "sidebar": "Sidebar",
     "preferencesYouTubeHint": "YouTube preferences",
-    "preferencesNouTubeHint": "NouTube preferences"
+    "preferencesNouTubeHint": "NeoTube preferences"
   },
   "native": {
     "format_bestQuality": "Best quality",
