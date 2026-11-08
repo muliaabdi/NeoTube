@@ -49,6 +49,41 @@ describe('settings', () => {
     expect(getSettingsSnapshot({}).showDislikes).toBe(false)
   })
 
+  it('defaults sponsor block categories to sponsor, selfpromo, interaction', () => {
+    expect(getSettingsSnapshot({}).sponsorBlockCategories).toEqual(['sponsor', 'selfpromo', 'interaction'])
+    expect(normalizePartialSettings()?.sponsorBlockCategories).toEqual(['sponsor', 'selfpromo', 'interaction'])
+  })
+
+  it('filters unknown sponsor block categories and keeps explicit empty selections', () => {
+    const data = { sponsorBlockCategories: ['sponsor', 'bogus', 'intro'] } as Partial<SettingsSnapshot>
+    expect(getSettingsSnapshot(data).sponsorBlockCategories).toEqual(['sponsor', 'intro'])
+    expect(normalizeSettings(data)?.sponsorBlockCategories).toEqual(['sponsor', 'intro'])
+    expect(getSettingsSnapshot({ sponsorBlockCategories: [] }).sponsorBlockCategories).toEqual([])
+  })
+
+  it('normalizes content country to uppercase ISO codes or null', () => {
+    expect(normalizeSettings({ contentCountry: 'id' } as Partial<SettingsSnapshot>)?.contentCountry).toBe('ID')
+    expect(getSettingsSnapshot({ contentCountry: 'id' }).contentCountry).toBe('ID')
+    expect(getSettingsSnapshot({}).contentCountry).toBeNull()
+    for (const contentCountry of ['xyz', 'i', '1a', 12, true, '']) {
+      const data = { contentCountry } as unknown as Partial<SettingsSnapshot>
+      expect(getSettingsSnapshot(data).contentCountry).toBeNull()
+      expect(normalizeSettings(data)?.contentCountry).toBeNull()
+    }
+  })
+
+  it('defaults opening settings on launch to on and only turns off when explicitly false', () => {
+    expect(getSettingsSnapshot({}).openSettingsOnLaunch).toBe(true)
+    expect(normalizePartialSettings()?.openSettingsOnLaunch).toBe(true)
+    expect(getSettingsSnapshot({ openSettingsOnLaunch: false }).openSettingsOnLaunch).toBe(false)
+    expect(normalizeSettings({ openSettingsOnLaunch: false })?.openSettingsOnLaunch).toBe(false)
+    for (const openSettingsOnLaunch of ['false', 0, null]) {
+      const data = { openSettingsOnLaunch } as unknown as Partial<SettingsSnapshot>
+      expect(getSettingsSnapshot(data).openSettingsOnLaunch).toBe(true)
+      expect(normalizeSettings(data)?.openSettingsOnLaunch).toBe(true)
+    }
+  })
+
   it('defaults desktop sidebar autohide setting off in snapshots', () => {
     expect(getSettingsSnapshot({}).autoHideSidebar).toBe(false)
   })

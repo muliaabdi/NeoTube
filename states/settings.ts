@@ -5,6 +5,37 @@ import { isWeb } from '@/lib/utils'
 import { normalizeI18nLanguage, type SupportedI18nLanguage } from '@/lib/i18n'
 import type { DownloadPreset } from '@/lib/download-format'
 
+export const SPONSOR_BLOCK_CATEGORIES = [
+  'sponsor',
+  'selfpromo',
+  'interaction',
+  'intro',
+  'outro',
+  'preview',
+  'music_offtopic',
+  'poi_highlight',
+  'filler',
+] as const
+
+export const DEFAULT_SPONSOR_BLOCK_CATEGORIES: string[] = ['sponsor', 'selfpromo', 'interaction']
+
+export const normalizeSponsorBlockCategories = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return DEFAULT_SPONSOR_BLOCK_CATEGORIES
+  }
+  // An explicit empty selection stands: the user turned every category off.
+  return value.filter((category): category is string =>
+    typeof category === 'string' && (SPONSOR_BLOCK_CATEGORIES as readonly string[]).includes(category))
+}
+
+export const normalizeContentCountry = (value: unknown): string | null => {
+  if (typeof value !== 'string') {
+    return null
+  }
+  const code = value.trim().toUpperCase()
+  return /^[A-Z]{2}$/.test(code) ? code : null
+}
+
 export interface SettingsSnapshot {
   language: SupportedI18nLanguage | null
   home: 'yt' | 'yt-music'
@@ -37,6 +68,9 @@ export interface SettingsSnapshot {
   restoreOnStart: boolean
   pullToRefreshEnabled: boolean
   sponsorBlock: boolean
+  sponsorBlockCategories: string[]
+  contentCountry: string | null
+  openSettingsOnLaunch: boolean
   blockAds: boolean
   discordPresence: boolean
   showDislikes: boolean
@@ -164,6 +198,11 @@ export const normalizeSettings = <T extends Partial<SettingsSnapshot> | undefine
   if (typeof data.blockAds !== 'boolean') {
     data.blockAds = true
   }
+  data.sponsorBlockCategories = normalizeSponsorBlockCategories(data.sponsorBlockCategories)
+  data.contentCountry = normalizeContentCountry(data.contentCountry)
+  if (data.openSettingsOnLaunch !== false) {
+    data.openSettingsOnLaunch = true
+  }
   if (typeof data.discordPresence !== 'boolean') {
     data.discordPresence = false
   }
@@ -257,6 +296,9 @@ export const getSettingsSnapshot = (value: Partial<Store> | undefined = settings
   restoreOnStart: typeof value?.restoreOnStart === 'boolean' ? value.restoreOnStart : false,
   pullToRefreshEnabled: typeof value?.pullToRefreshEnabled === 'boolean' ? value.pullToRefreshEnabled : true,
   sponsorBlock: typeof value?.sponsorBlock === 'boolean' ? value.sponsorBlock : true,
+  sponsorBlockCategories: normalizeSponsorBlockCategories(value?.sponsorBlockCategories),
+  contentCountry: normalizeContentCountry(value?.contentCountry),
+  openSettingsOnLaunch: value?.openSettingsOnLaunch === false ? false : true,
   blockAds: typeof value?.blockAds === 'boolean' ? value.blockAds : true,
   discordPresence: Boolean(value?.discordPresence),
   showDislikes: Boolean(value?.showDislikes),
@@ -329,6 +371,9 @@ export const settings$ = observable<Store>({
   restoreOnStart: false,
   pullToRefreshEnabled: true,
   sponsorBlock: true,
+  sponsorBlockCategories: DEFAULT_SPONSOR_BLOCK_CATEGORIES,
+  contentCountry: null,
+  openSettingsOnLaunch: true,
   blockAds: true,
   discordPresence: false,
   showDislikes: false,
