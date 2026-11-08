@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Linking, Pressable, View } from 'react-native'
 import MaterialIcons from '@react-native-vector-icons/material-icons'
 import { version } from '../../package.json'
-import { version as desktopVersion } from '../../desktop/package.json'
 import { NouText } from '../NouText'
 import { NouButton } from '../button/NouButton'
 import { clsx, isWeb } from '@/lib/utils'
@@ -25,7 +24,7 @@ function formatReleaseDate(value: string) {
 
 export const SettingsChangelogContent = () => {
   const tw = useTwColor()
-  const currentVersion = `v${isWeb ? desktopVersion : version}`
+  const currentVersion = `v${version}`
   const { data, isLoading, isError, refetch, isFetching } = useQuery(getReleaseFeedQuery())
 
   if (isLoading) {

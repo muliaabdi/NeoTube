@@ -1,12 +1,4 @@
-import { toast } from 'react-hot-toast'
-import { Appearance } from 'react-native'
-import { getToastColors } from './toast-theme'
-
-export function showToast(msg: string) {
-  // Appearance follows settings$.theme, falling back to the system scheme.
-  const colors = getToastColors(Appearance.getColorScheme() !== 'light')
-  toast(msg, {
-    icon: '🦦',
-    style: { background: colors.background, color: colors.text },
-  })
-}
+// Web fallback only; native platforms resolve toast.android.ts / toast.ios.ts.
+// ponytail: web target went away with the desktop workspace — restore the
+// react-hot-toast implementation here if web ever comes back.
+export function showToast(_msg: string) {}

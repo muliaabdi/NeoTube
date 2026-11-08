@@ -1,6 +1,3 @@
-import { MAIN_CHANNEL } from '../desktop/src/main/ipc/constants'
-import type { MainInterface } from '../desktop/src/main/ipc/main'
-
 export type FormatOption = {
   formatId: string
   label: string
@@ -15,14 +12,140 @@ export type FormatOption = {
   codec?: string
 }
 
-type Asyncify<T> = {
-  [K in keyof T]: T[K] extends (...args: infer Args) => infer Result ? (...args: Args) => Promise<Awaited<Result>> : never
+export type UpdateCheckResult =
+  | { status: 'not-available' }
+  | { status: 'available'; version: string }
+  | { status: 'error'; message?: string }
+
+export interface MainClient {
+  clearData(): Promise<void> | void
+  toggleInterception(enabled: boolean): Promise<void> | void
+  listFormats(url: string, useCookies: boolean): Promise<{ title: string; formats: FormatOption[] }>
+  downloadVideo(url: string, formatId: string, outputDir: string, useCookies: boolean): Promise<void>
+  getDownloadsPath(): Promise<string>
+  selectFolder(): Promise<string | null>
+  openFolder(filePath: string): Promise<void> | void
+  openFile(filePath: string): Promise<void> | void
+  updateYtDlp(): Promise<void>
+  fetchFeed(url: string): Promise<{ ok: boolean; status: number; statusText: string; body: string }>
+  setCookie(cookie: string): Promise<void>
+  setBlocklist(blocklist: unknown): Promise<void> | void
+  setBlockAds(enabled: boolean): Promise<void> | void
+  isUpdateSupported(): Promise<boolean>
+  checkForUpdate(): Promise<UpdateCheckResult>
+  quitAndInstall(): Promise<void> | void
+  discordLogin(): Promise<{ loggedIn: boolean }>
+  discordLogout(): Promise<void> | void
+  getDiscordStatus(): Promise<{ loggedIn: boolean }> | { loggedIn: boolean }
 }
 
-export type MainClient = Asyncify<MainInterface>
+type NouTubeDownloadClient = {
+  listFormats?: MainClient['listFormats']
+  downloadVideo?: MainClient['downloadVideo']
+  getDownloadsPath?: MainClient['getDownloadsPath']
+  openFile?: MainClient['openFile']
+  updateYtDlp?: MainClient['updateYtDlp']
+  discordLogin?: MainClient['discordLogin']
+  discordLogout?: MainClient['discordLogout']
+  getDiscordStatus?: MainClient['getDiscordStatus']
+}
 
-export const mainClient = new Proxy({} as MainClient, {
-  get(_target, name) {
-    return async (...args: any[]) => window.electron.ipcRenderer.invoke(MAIN_CHANNEL, name, ...args)
+// ponytail: lazy require keeps bun test from loading expo-modules-core at
+// import time; swap for a static import if web/tests ever get an Expo preset.
+type LazyModule = typeof import('@/modules/nou-tube-view')
+let cachedModule: LazyModule | undefined
+function viewModule(): LazyModule {
+  if (!cachedModule) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    cachedModule = require('@/modules/nou-tube-view') as LazyModule
+  }
+  return cachedModule
+}
+
+export const mainClient: MainClient = {
+  async clearData() {},
+  async toggleInterception() {},
+  async listFormats(url, useCookies) {
+    const nativeModule = viewModule().default as NouTubeDownloadClient
+    if (typeof nativeModule.listFormats !== 'function') {
+      throw new Error('download API unavailable')
+    }
+    return nativeModule.listFormats(url, useCookies)
   },
-})
+  async downloadVideo(url, formatId, outputDir, useCookies) {
+    const nativeModule = viewModule().default as NouTubeDownloadClient
+    if (typeof nativeModule.downloadVideo !== 'function') {
+      throw new Error('download API unavailable')
+    }
+    return nativeModule.downloadVideo(url, formatId, outputDir, useCookies)
+  },
+  async getDownloadsPath() {
+    const nativeModule = viewModule().default as NouTubeDownloadClient
+    if (typeof nativeModule.getDownloadsPath !== 'function') {
+      return ''
+    }
+    try {
+      return await nativeModule.getDownloadsPath()
+    } catch {
+      return ''
+    }
+  },
+  async selectFolder() {
+    return null
+  },
+  async openFolder() {},
+  async openFile(filePath) {
+    const nativeModule = viewModule().default as NouTubeDownloadClient
+    if (typeof nativeModule.openFile !== 'function') {
+      return
+    }
+    return nativeModule.openFile(filePath)
+  },
+  async updateYtDlp() {
+    const nativeModule = viewModule().default as NouTubeDownloadClient
+    if (typeof nativeModule.updateYtDlp !== 'function') {
+      return
+    }
+    return nativeModule.updateYtDlp()
+  },
+  async fetchFeed(url) {
+    // Route through the native module so the request honors the configured proxy;
+    // RN's global fetch ignores the WebView ProxyController.
+    const mod = viewModule()
+    if (typeof (mod.default as { fetchFeed?: unknown }).fetchFeed === 'function') {
+      return (mod.default as { fetchFeed: MainClient['fetchFeed'] }).fetchFeed(url)
+    }
+    const res = await fetch(url)
+    return {
+      ok: res.ok,
+      status: res.status,
+      statusText: res.statusText,
+      body: await res.text(),
+    }
+  },
+  async setCookie() {},
+  async setBlocklist() {},
+  async setBlockAds() {},
+  async isUpdateSupported() {
+    return false
+  },
+  async checkForUpdate() {
+    return { status: 'not-available' }
+  },
+  async quitAndInstall() {},
+  async discordLogin() {
+    const nativeModule = viewModule().default as NouTubeDownloadClient
+    if (typeof nativeModule.discordLogin !== 'function') {
+      return { loggedIn: false }
+    }
+    return nativeModule.discordLogin()
+  },
+  async discordLogout() {
+    const nativeModule = viewModule().default as NouTubeDownloadClient
+    return nativeModule.discordLogout?.()
+  },
+  async getDiscordStatus() {
+    const nativeModule = viewModule().default as NouTubeDownloadClient
+    return nativeModule.getDiscordStatus?.() ?? { loggedIn: false }
+  },
+}

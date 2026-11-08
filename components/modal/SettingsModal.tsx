@@ -1,6 +1,5 @@
 import { BackHandler, View, useWindowDimensions } from 'react-native'
 import { version } from '../../package.json'
-import { version as desktopVersion } from '../../desktop/package.json'
 import { useCallback, useEffect, useRef } from 'react'
 import { isWeb } from '@/lib/utils'
 import { useValue } from '@legendapp/state/react'
@@ -18,7 +17,7 @@ export const SettingsModal = () => {
   const tree = useRef<SettingsTreeHandle>(null)
 
   const isNarrowNative = !isWeb && width < 768
-  const appVersion = isWeb ? desktopVersion : version
+  const appVersion = version
 
   const closeSettingsChildren = useCallback(() => {
     ui$.sleepTimerModalOpen.set(false)

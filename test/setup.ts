@@ -3,6 +3,10 @@ import { mock } from 'bun:test'
 // Native modules can't be loaded by bun (react-native's entrypoint uses Flow
 // syntax), so state modules that persist via MMKV need these stubs.
 
+// lib/main-client.ts (the native impl) pulls in the view module whose deps
+// reference RN globals at import time.
+;(globalThis as any).__DEV__ = false
+
 mock.module('react-native-get-random-values', () => ({}))
 
 mock.module('react-native', () => ({

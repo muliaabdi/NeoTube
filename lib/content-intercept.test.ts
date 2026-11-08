@@ -71,5 +71,4 @@ it('seeds the saved Shorts preference before content initialization on each shel
   expect(app).toContain('window.NouTubeHideShorts = ${settings$.hideShorts.get()')
   expect(app).toContain('window.NouTubeHideShorts = ${hideShorts')
   expect(read('../content/noutube.ts')).toContain('shortsHidden: window.NouTubeHideShorts !== false')
-  expect(read('../extension/lib/page/prelude.ts')).toContain('window.NouTubeHideShorts = cache.hideShorts !== false')
 })

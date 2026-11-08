@@ -1,8 +1,4 @@
 {
-  "workspaces": [
-    "desktop",
-    "extension"
-  ],
   "name": "noutube",
   "private": true,
   "main": "index.js",
@@ -16,7 +12,6 @@
     "start": "expo start",
     "android": "expo run:android --variant fullDebug",
     "ios": "expo run:ios",
-    "web": "expo start --web",
     "lint": "expo lint"
   },
   "dependencies": {
