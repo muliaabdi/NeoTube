@@ -1,14 +1,15 @@
 import { expect, test } from 'bun:test'
 import { mainClient } from './main-client'
+import { version } from '../package.json'
 
 const stubFetch = (body: unknown, status = 200) =>
   (() => Promise.resolve(new Response(JSON.stringify(body), { status }))) as unknown as typeof fetch
 
 test('checkForUpdate: rilis lebih baru dari versi app -> available + url', async () => {
   const orig = globalThis.fetch
-  globalThis.fetch = stubFetch({ tag_name: 'v1.0.0', html_url: 'u' })
+  globalThis.fetch = stubFetch({ tag_name: 'v99.0.0', html_url: 'u' })
   try {
-    expect(await mainClient.checkForUpdate()).toEqual({ status: 'available', version: '1.0.0', url: 'u' })
+    expect(await mainClient.checkForUpdate()).toEqual({ status: 'available', version: '99.0.0', url: 'u' })
   } finally {
     globalThis.fetch = orig
   }
@@ -16,7 +17,7 @@ test('checkForUpdate: rilis lebih baru dari versi app -> available + url', async
 
 test('checkForUpdate: versi sama dengan app -> not-available', async () => {
   const orig = globalThis.fetch
-  globalThis.fetch = stubFetch({ tag_name: 'v0.7.6', html_url: 'u' })
+  globalThis.fetch = stubFetch({ tag_name: `v${version}`, html_url: 'u' })
   try {
     expect(await mainClient.checkForUpdate()).toEqual({ status: 'not-available' })
   } finally {

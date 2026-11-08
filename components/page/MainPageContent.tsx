@@ -312,10 +312,6 @@ const DesktopTabView: React.FC<{
   useObserveEffect(userStyles$, () => syncUserStylesToWebview())
   useObserveEffect(blocklist$, () => syncBlocklistToWebview())
   useEffect(() => {
-    // Startup update check; throttled to once a day inside runUpdateCheck.
-    void runUpdateCheck(version)
-  }, [])
-  useEffect(() => {
     if (!readyRef.current) return
     executeQuietly(
       webviewRef.current,
@@ -987,6 +983,11 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
   useObserveEffect(settings$.showHistoryButtonInHeader, () => syncSettingsToWebview())
   useObserveEffect(settings$.showLibraryButtonInHeader, () => syncSettingsToWebview())
   useObserveEffect(settings$.showStarButtonInHeader, () => syncSettingsToWebview())
+
+  useEffect(() => {
+    // Startup update check; throttled to once a day inside runUpdateCheck.
+    void runUpdateCheck(version)
+  }, [])
 
   // Track whether Android runs us on a desktop-class screen. The manual
   // desktop-site override only lasts for one such session, so drop it whenever
