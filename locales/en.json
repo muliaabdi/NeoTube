@@ -243,7 +243,7 @@
     "showForwardButtonInHeader": "Show Forward button in navbar",
     "showReloadButtonInHeader": "Show Reload button in navbar",
     "showHistoryButtonInHeader": "Show History button in navbar",
-    "showSleepTimerButtonInHeader": "Show Sleep timer button in toolbar",
+    "showSleepTimerButtonInHeader": "Show Sleep timer button in top bar",
     "showLibraryButtonInHeader": "Show Library button in navbar",
     "showStarButtonInHeader": "Show Star button in navbar",
     "mediaNotificationButtons": "Media notification buttons",
