@@ -31,6 +31,7 @@ import { onDownloadProgress } from '@/lib/download-progress'
 import { describeDownloadError } from '@/lib/download-error'
 import { t } from 'i18next'
 import { downloads$ } from '@/states/downloads'
+import { extractVideoId, localVideos$, recordDownloadedVideo } from '@/states/downloads-index'
 import { resolveUserAgent } from '@/lib/useragent'
 import { withContentCountry } from '@/lib/content-country'
 import { retryNativeViewCall } from '@/lib/native-view-call'
@@ -164,6 +165,12 @@ const DesktopTabView: React.FC<{
       webviewRef.current,
       `localStorage.setItem('nou:settings', '${value}'); window.NouTube?.setSettings?.(${value})`,
     )
+  }, [])
+
+  const syncLocalVideosToWebview = useCallback(() => {
+    if (!readyRef.current) return
+    const literal = JSON.stringify(JSON.stringify(localVideos$.get()))
+    executeQuietly(webviewRef.current, `localStorage.setItem('nou:downloads', ${literal})`)
   }, [])
 
   const toggleShorts = useCallback((hide?: boolean) => {
@@ -479,6 +486,19 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
             savedPath: payload.filePath || '',
             phase: 'done',
           })
+          // Record the finished file for local playback; the page overlay and
+          // the media servers key off this index.
+          const videoId = extractVideoId(payload.url)
+          if (videoId && payload.filePath) {
+            const state = downloads$[payload.url].get()
+            recordDownloadedVideo({
+              videoId,
+              uri: payload.filePath,
+              formatId: state.formatId,
+              title: state.title,
+              audioOnly: state.audioOnly,
+            })
+          }
         }
       }
     })
@@ -534,6 +554,18 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
       // from the next request on.
       void mainClient.setBlockAds(settings.blockAds)
     }
+  }, [nativeViews])
+
+  // The local playback index travels the same road the settings do: into the
+  // page as localStorage, and to the shell that serves the files (see
+  // states/downloads-index.ts).
+  const syncLocalVideosToWebview = useCallback(() => {
+    const value = JSON.stringify(localVideos$.get())
+    const literal = JSON.stringify(value)
+    for (const ref of nativeViews()) {
+      ref.executeJavaScript(`localStorage.setItem('nou:downloads', ${literal})`)
+    }
+    void mainClient.syncLocalMediaIndex(value)
   }, [nativeViews])
 
   // The url observer below fires once as it mounts. When the restore above put
@@ -983,6 +1015,9 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
   useObserveEffect(settings$.showHistoryButtonInHeader, () => syncSettingsToWebview())
   useObserveEffect(settings$.showLibraryButtonInHeader, () => syncSettingsToWebview())
   useObserveEffect(settings$.showStarButtonInHeader, () => syncSettingsToWebview())
+  // Fires again once the persisted download index has been restored, and on
+  // every download that lands.
+  useObserveEffect(localVideos$, () => syncLocalVideosToWebview())
 
   useEffect(() => {
     // Startup update check; throttled to once a day inside runUpdateCheck.

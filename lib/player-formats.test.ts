@@ -87,7 +87,7 @@ describe('buildFormatOptionsFromPlayer', () => {
         audio(251, 'opus', { ext: 'webm', bitrate: 160_000 }),
       ]),
     )
-    const options = result?.formats.filter((opt) => opt.kind === 'audio')
+    const options = result?.formats.filter((opt) => opt.kind === 'audio' && opt.advanced)
     expect(options?.map((opt) => opt.label)).toEqual(['Audio AAC', 'Audio Opus'])
     expect(options?.[0].formatId).toBe('140/bestaudio/best')
     expect(options?.[0].description).toBe('M4A · 128 kbps · ~3 MB')

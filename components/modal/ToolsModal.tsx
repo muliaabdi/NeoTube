@@ -95,7 +95,7 @@ export const ToolsModal = () => {
 
   // The format list stays up after a download starts, so another format of the same video can
   // be grabbed without resolving the URL again.
-  const handleDownload = (formatId: string) => {
+  const handleDownload = (formatId: string, audioOnly: boolean) => {
     const targetUrl = loadedUrl || toolsModalUrl || url
     downloads$[targetUrl].set({
       url: targetUrl,
@@ -105,6 +105,8 @@ export const ToolsModal = () => {
       progressLine: '',
       errorMsg: '',
       savedPath: '',
+      formatId,
+      audioOnly,
     })
 
     // The progress card sits above the format list, which can be long enough that the card is
@@ -405,7 +407,7 @@ export const ToolsModal = () => {
                     </Pressable>
                     <Pressable
                       disabled={isDownloadingCurrent}
-                      onPress={() => handleDownload(opt.formatId)}
+                      onPress={() => handleDownload(opt.formatId, opt.kind === 'audio')}
                       className={
                         isDownloadingCurrent
                           ? 'h-11 w-11 items-center justify-center rounded-full bg-zinc-300 dark:bg-zinc-700'

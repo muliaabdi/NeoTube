@@ -136,11 +136,13 @@ const buildCuratedOptions = (videoFormats: RawFormat[], audioFormats: RawFormat[
       formatId: 'bestaudio/best',
       label: best.ext ? t('native.format_audio', { ext: best.ext }) : t('native.format_audioOnly'),
       description: t('native.format_audioStreamDesc'),
+      kind: 'audio',
     })
     options.push({
       formatId: 'bestaudio-mp3',
       label: t('native.format_audio', { ext: 'mp3' }),
       description: t('native.format_audioMp3Desc'),
+      kind: 'audio',
     })
   }
 
