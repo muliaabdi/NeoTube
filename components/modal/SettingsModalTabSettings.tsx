@@ -950,6 +950,12 @@ export const SettingsAppearanceContent = () => {
               onPress={() => settings$.showHistoryButtonInHeader.set(!settings.showHistoryButtonInHeader)}
             />
             <SettingsToggleRow
+              label={t('settings.showDownloadsButtonInHeader')}
+              icon="download"
+              value={settings.showDownloadsButtonInHeader}
+              onPress={() => settings$.showDownloadsButtonInHeader.set(!settings.showDownloadsButtonInHeader)}
+            />
+            <SettingsToggleRow
               label="Show playback speed control"
               icon="speed"
               value={settings.showPlaybackSpeedControl}

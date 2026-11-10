@@ -89,6 +89,7 @@ export interface SettingsSnapshot {
   showPlaybackQualityControl: boolean
   showSleepTimerButtonInHeader: boolean
   showLibraryButtonInHeader: boolean
+  showDownloadsButtonInHeader: boolean
   showStarButtonInHeader: boolean
   showMediaNotificationPrevButton: boolean
   showMediaNotificationNextButton: boolean
@@ -177,6 +178,9 @@ export const normalizeSettings = <T extends Partial<SettingsSnapshot> | undefine
   }
   if (typeof data.showLibraryButtonInHeader !== 'boolean') {
     data.showLibraryButtonInHeader = true
+  }
+  if (typeof data.showDownloadsButtonInHeader !== 'boolean') {
+    data.showDownloadsButtonInHeader = true
   }
   if (typeof data.showStarButtonInHeader !== 'boolean') {
     data.showStarButtonInHeader = true
@@ -332,6 +336,8 @@ export const getSettingsSnapshot = (value: Partial<Store> | undefined = settings
   showSleepTimerButtonInHeader: Boolean(value?.showSleepTimerButtonInHeader),
   showLibraryButtonInHeader:
     typeof value?.showLibraryButtonInHeader === 'boolean' ? value.showLibraryButtonInHeader : true,
+  showDownloadsButtonInHeader:
+    typeof value?.showDownloadsButtonInHeader === 'boolean' ? value.showDownloadsButtonInHeader : true,
   showStarButtonInHeader: typeof value?.showStarButtonInHeader === 'boolean' ? value.showStarButtonInHeader : true,
   showMediaNotificationPrevButton:
     typeof value?.showMediaNotificationPrevButton === 'boolean' ? value.showMediaNotificationPrevButton : true,
@@ -408,6 +414,7 @@ export const settings$ = observable<Store>({
   showPlaybackQualityControl: false,
   showSleepTimerButtonInHeader: false,
   showLibraryButtonInHeader: true,
+  showDownloadsButtonInHeader: true,
   showStarButtonInHeader: true,
   showMediaNotificationPrevButton: true,
   showMediaNotificationNextButton: true,

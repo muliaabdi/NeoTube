@@ -10,6 +10,7 @@ import { queryClient } from '@/lib/query/client'
 import { BookmarkModal } from '../modal/BookmarkModal'
 import { FolderModal } from '../modal/FolderModal'
 import { HistoryModal } from '../modal/HistoryModal'
+import { DownloadsModal } from '../modal/DownloadsModal'
 import { LibraryModal } from '../modal/LibraryModal'
 import { QueueModal } from '../modal/QueueModal'
 import { SettingsModal } from '../modal/SettingsModal'
@@ -119,6 +120,7 @@ export const MainPage: React.FC<{ contentJs: string }> = ({ contentJs }) => {
           <MoveBookmarkModal />
           <FolderModal />
           <HistoryModal />
+          <DownloadsModal />
           <QueueModal />
           {nIf(!isWeb, <SettingsModal />)}
           <UrlModal />

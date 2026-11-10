@@ -273,6 +273,7 @@
     "preferencesDistractionFree": "Bebas gangguan",
     "toolbarButtons": "Tombol navbar",
     "showHistoryButtonInHeader": "Tampilkan tombol Riwayat di navbar",
+    "showDownloadsButtonInHeader": "Tampilkan tombol Unduhan di navbar",
     "translation": {
       "enable": "Terjemahkan komentar",
       "hint": "Tampilkan tombol terjemahkan pada komentar untuk menerjemahkannya di perangkat Anda.",

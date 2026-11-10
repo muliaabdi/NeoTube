@@ -1,11 +1,12 @@
 import { settings$, type SettingsSnapshot } from '@/states/settings'
 import { isWeb } from '@/lib/utils'
 
-export const getNavbarButtons = (s: Pick<SettingsSnapshot, 'showBackButtonInHeader' | 'showForwardButtonInHeader' | 'showReloadButtonInHeader' | 'showHomeButtonInHeader' | 'showHistoryButtonInHeader' | 'showLibraryButtonInHeader' | 'showStarButtonInHeader'>) => ({
+export const getNavbarButtons = (s: Pick<SettingsSnapshot, 'showBackButtonInHeader' | 'showForwardButtonInHeader' | 'showReloadButtonInHeader' | 'showHomeButtonInHeader' | 'showHistoryButtonInHeader' | 'showDownloadsButtonInHeader' | 'showLibraryButtonInHeader' | 'showStarButtonInHeader'>) => ({
   back: s.showBackButtonInHeader,
   forward: s.showForwardButtonInHeader,
   reload: s.showReloadButtonInHeader,
   home: s.showHomeButtonInHeader,
+  downloads: s.showDownloadsButtonInHeader,
   history: s.showHistoryButtonInHeader,
   library: s.showLibraryButtonInHeader,
   star: s.showStarButtonInHeader,

@@ -5,6 +5,7 @@ import {
   iconNavbarHistory,
   iconNavbarHome,
   iconNavbarLibrary,
+  iconNavbarDownloads,
   iconNavbarReload,
   iconNavbarSettings,
 } from './icons'
@@ -15,6 +16,7 @@ export type NavbarButtonFlags = {
   reload?: boolean
   home?: boolean
   history?: boolean
+  downloads?: boolean
   library?: boolean
   star?: boolean
 }
@@ -30,6 +32,7 @@ export function buildNavbarButtons(flags: NavbarButtonFlags): Array<NavbarButton
     flags.forward ? { id: 'forward', icon: iconNavbarArrowForward, run: () => history.forward() } : null,
     flags.reload ? { id: 'reload', icon: iconNavbarReload, run: () => location.reload() } : null,
     flags.home ? { id: 'home', icon: iconNavbarHome, run: () => location.assign('https://m.youtube.com/') } : null,
+    flags.downloads ? { id: 'downloads', icon: iconNavbarDownloads, run: emitAction('downloads') } : null,
     flags.history ? { id: 'history', icon: iconNavbarHistory, run: emitAction('history') } : null,
     flags.library ? { id: 'library', icon: iconNavbarLibrary, run: emitAction('library') } : null,
     flags.star

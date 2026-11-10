@@ -1,7 +1,7 @@
 import { ActivityIndicator, Pressable, ScrollView, TextInput, View, useColorScheme } from 'react-native'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useValue } from '@legendapp/state/react'
-import { ui$ } from '@/states/ui'
+import { updateUrl, ui$ } from '@/states/ui'
 import { settings$ } from '@/states/settings'
 import { BaseModal } from './BaseModal'
 import { NouText } from '../NouText'
@@ -88,6 +88,12 @@ export const ToolsModal = () => {
   }, [isOpen, toolsModalUrl, loadFormats])
 
   const openSavedFile = (savedPath: string) => {
+    const targetUrl = loadedUrl || toolsModalUrl || url
+    if (targetUrl) {
+      ui$.toolsModalOpen.set(false)
+      updateUrl(targetUrl)
+      return
+    }
     Promise.resolve(mainClient.openFile(savedPath)).catch((err: any) => {
       console.error('failed to open file', err)
     })

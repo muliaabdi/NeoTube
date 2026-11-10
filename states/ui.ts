@@ -46,6 +46,7 @@ interface Store {
   feedModalOpen: boolean
   folderModalFolder: Folder | undefined
   historyModalOpen: boolean
+  downloadsModalOpen: boolean
   libraryModalOpen: boolean
   libraryModalTab: string
   queueModalOpen: boolean
@@ -102,6 +103,7 @@ export const ui$ = observable<Store>({
   feedModalOpen: false,
   folderModalFolder: undefined,
   historyModalOpen: false,
+  downloadsModalOpen: false,
   libraryModalOpen: false,
   libraryModalTab: '',
   queueModalOpen: false,

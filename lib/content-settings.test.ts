@@ -10,9 +10,10 @@ describe('getNavbarButtons', () => {
         showReloadButtonInHeader: true,
         showHomeButtonInHeader: false,
         showHistoryButtonInHeader: true,
+        showDownloadsButtonInHeader: true,
         showLibraryButtonInHeader: false,
         showStarButtonInHeader: true,
       }),
-    ).toEqual({ back: true, forward: false, reload: true, home: false, history: true, library: false, star: true })
+    ).toEqual({ back: true, forward: false, reload: true, home: false, downloads: true, history: true, library: false, star: true })
   })
 })

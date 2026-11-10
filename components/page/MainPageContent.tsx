@@ -668,6 +668,8 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
         case 'navbar-action':
           if (data?.action === 'history') {
             ui$.historyModalOpen.set(true)
+          } else if (data?.action === 'downloads') {
+            ui$.downloadsModalOpen.set(true)
           } else if (data?.action === 'library') {
             ui$.libraryModalOpen.set(true)
           } else if (data?.action === 'settings') {
@@ -1020,6 +1022,7 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
   useObserveEffect(settings$.showReloadButtonInHeader, () => syncSettingsToWebview())
   useObserveEffect(settings$.showHomeButtonInHeader, () => syncSettingsToWebview())
   useObserveEffect(settings$.showHistoryButtonInHeader, () => syncSettingsToWebview())
+  useObserveEffect(settings$.showDownloadsButtonInHeader, () => syncSettingsToWebview())
   useObserveEffect(settings$.showLibraryButtonInHeader, () => syncSettingsToWebview())
   useObserveEffect(settings$.showStarButtonInHeader, () => syncSettingsToWebview())
   // Fires again once the persisted download index has been restored, and on
