@@ -19,6 +19,7 @@ import { installEncodedAuthorNameFix } from './author-names'
 import { guardMediaSessionHandlers, installBackgroundGuard } from './background-guard'
 import { installSplitView, navigateWatch, setMuted, setNativeMini } from './split-view'
 import { installNavbarButtons } from './navbar'
+import { installLocalPlayback } from './local-playback'
 
 try {
   if ((window as any).NouTubePreferH264) {
@@ -44,6 +45,7 @@ try {
   interceptClipboard()
   installWatchNavigation()
   installSplitView()
+  installLocalPlayback()
 
   if (!window.electron) {
     installNavbarButtons()

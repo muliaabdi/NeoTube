@@ -167,12 +167,6 @@ const DesktopTabView: React.FC<{
     )
   }, [])
 
-  const syncLocalVideosToWebview = useCallback(() => {
-    if (!readyRef.current) return
-    const literal = JSON.stringify(JSON.stringify(localVideos$.get()))
-    executeQuietly(webviewRef.current, `localStorage.setItem('nou:downloads', ${literal})`)
-  }, [])
-
   const toggleShorts = useCallback((hide?: boolean) => {
     if (!readyRef.current) return
     executeQuietly(webviewRef.current, hide ? 'window.NouTube?.hideShorts?.()' : 'window.NouTube?.showShorts?.()')
@@ -563,7 +557,9 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
     const value = JSON.stringify(localVideos$.get())
     const literal = JSON.stringify(value)
     for (const ref of nativeViews()) {
-      ref.executeJavaScript(`localStorage.setItem('nou:downloads', ${literal})`)
+      ref.executeJavaScript(
+        `localStorage.setItem('nou:downloads', ${literal}); window.dispatchEvent(new Event('noutube:downloads'))`,
+      )
     }
     void mainClient.syncLocalMediaIndex(value)
   }, [nativeViews])
@@ -733,6 +729,17 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
             current,
             duration: Number.isFinite(duration) && duration > 0 ? duration : 0,
           })
+          break
+        }
+        case 'local-playback-start': {
+          // Resume position for the local overlay: find the saved progress in
+          // history and hand it back to the page so the <video> can seek.
+          const videoId = typeof data?.videoId === 'string' ? data.videoId : ''
+          const match = videoId ? history$.bookmarks.peek().find((e) => e.videoId === videoId) : null
+          const seconds = match?.current ? Math.floor(match.current) : 0
+          const webview = (source === 'player' ? playerRef.current : nativeRef.current) || ui$.webview.get()
+          const script = `window.NouTube?.setLocalPosition?.(${JSON.stringify(videoId)}, ${seconds})`
+          webview?.executeJavaScript?.(script)
           break
         }
         case 'playback':
