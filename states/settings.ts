@@ -53,6 +53,9 @@ export interface SettingsSnapshot {
   hideShortsInNavbar: boolean
   hideMixPlaylist: boolean
   keepHistory: boolean
+  // Play a downloaded copy of a video over the YouTube player (see
+  // docs/superpowers/specs/2026-11-10-local-playback-design.md).
+  localPlayback: boolean
   replaceWatchNavigation: boolean
   forceLandscape: boolean
   miniPlayer: boolean
@@ -240,6 +243,9 @@ export const normalizeSettings = <T extends Partial<SettingsSnapshot> | undefine
   if (typeof data.miniPlayer !== 'boolean') {
     data.miniPlayer = true
   }
+  if (typeof data.localPlayback !== 'boolean') {
+    data.localPlayback = true
+  }
   // PlayerFrame reads this one straight out of the store and does arithmetic
   // on it, so anything unexpected has to be replaced, not defaulted.
   data.miniPlayerPosition = getMiniPlayerPosition(data)
@@ -285,6 +291,7 @@ export const getSettingsSnapshot = (value: Partial<Store> | undefined = settings
   hideShortsInNavbar: Boolean(value?.hideShortsInNavbar),
   hideMixPlaylist: Boolean(value?.hideMixPlaylist),
   keepHistory: typeof value?.keepHistory === 'boolean' ? value.keepHistory : true,
+  localPlayback: typeof value?.localPlayback === 'boolean' ? value.localPlayback : true,
   replaceWatchNavigation: Boolean(value?.replaceWatchNavigation),
   forceLandscape: value?.forceLandscape === true,
   // Force miniPlayer on mobile by default if not set or if migrating from legacy false
@@ -369,6 +376,7 @@ export const settings$ = observable<Store>({
   hideShortsInNavbar: false,
   hideMixPlaylist: false,
   keepHistory: true,
+  localPlayback: true,
   replaceWatchNavigation: false,
   forceLandscape: false,
   miniPlayer: true,

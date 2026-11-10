@@ -725,6 +725,13 @@ export const SettingsYouTubeContent = () => {
               </>
             ) : null}
             <SettingsToggleRow
+              label={t('settings.localPlayback')}
+              description={t('settings.localPlaybackHint')}
+              icon="file-download-done"
+              value={settings.localPlayback}
+              onPress={() => settings$.localPlayback.set(!settings.localPlayback)}
+            />
+            <SettingsToggleRow
               label={t('settings.showOriginalVideoTitle')}
               icon="translate"
               value={settings.showOriginalVideoTitle}

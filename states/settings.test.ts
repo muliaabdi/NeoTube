@@ -18,6 +18,20 @@ describe('settings', () => {
     }
   })
 
+  it('defaults local playback on and accepts only boolean preferences', () => {
+    expect(getSettingsSnapshot({}).localPlayback).toBe(true)
+    expect(normalizePartialSettings()?.localPlayback).toBe(true)
+    for (const localPlayback of [true, false]) {
+      expect(getSettingsSnapshot({ localPlayback }).localPlayback).toBe(localPlayback)
+      expect(normalizeSettings({ localPlayback }).localPlayback).toBe(localPlayback)
+    }
+    for (const localPlayback of ['true', 'false', 1, null]) {
+      const data = { localPlayback } as unknown as Partial<SettingsSnapshot>
+      expect(getSettingsSnapshot(data).localPlayback).toBe(true)
+      expect(normalizeSettings(data)?.localPlayback).toBe(true)
+    }
+  })
+
   it('keeps proxy credentials out of backup and sync snapshots', () => {
     const snapshot = getSettingsSnapshot({ proxyUsername: 'device user', proxyPassword: 'device password' })
     expect(snapshot).not.toHaveProperty('proxyUsername')
