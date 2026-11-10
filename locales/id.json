@@ -320,6 +320,8 @@
     "showMediaNotificationCloseButton": "Tampilkan tombol Tutup",
     "mediaNotificationButtonsHint": "Android menampilkan paling banyak empat tombol ini di samping tombol putar, sesuai urutan yang tercantum di sini. Anda telah mengaktifkan {{selected}}.",
     "miniPlayerHint": "Saat meninggalkan video, video akan tetap diputar di sudut halaman.",
+    "localPlayback": "Putar video unduhan secara lokal",
+    "localPlaybackHint": "Gantikan player YouTube dengan file tersimpan saat membuka video yang sudah diunduh",
     "pictureInPicture": "Picture-in-picture",
     "pictureInPictureHint": "Tetap putar video dalam jendela mengambang saat Anda keluar dari aplikasi.",
     "blockAds": {

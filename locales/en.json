@@ -275,6 +275,8 @@
     "hideMixPlaylist": "Hide mix playlist",
     "miniPlayer": "Mini player",
     "miniPlayerHint": "Leaving a video keeps it playing in a corner of the page.",
+    "localPlayback": "Play downloaded videos locally",
+    "localPlaybackHint": "Overlay the YouTube player with the saved file when opening a downloaded video",
     "pictureInPicture": "Picture-in-picture",
     "pictureInPictureHint": "Keep the video playing in a floating window when you leave the app.",
     "preferH264": "Prefer H.264 (block VP9/AV1)",

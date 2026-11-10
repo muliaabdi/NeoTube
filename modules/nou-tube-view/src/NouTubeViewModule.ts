@@ -38,6 +38,7 @@ declare class NouTubeViewModule extends NativeModule {
     useCookies: boolean,
   ): Promise<{ title: string; formats: Array<{ formatId: string; label: string; description: string }> }>
   downloadVideo(url: string, formatId: string, outputDir: string, useCookies: boolean): Promise<void>
+  syncLocalMediaIndex(json: string): void
   getDownloadsPath(): Promise<string>
   updateYtDlp(): Promise<void>
   setLocaleStrings(strings: Record<string, string>): void

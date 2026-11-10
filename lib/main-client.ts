@@ -25,6 +25,9 @@ export interface MainClient {
   toggleInterception(enabled: boolean): Promise<void> | void
   listFormats(url: string, useCookies: boolean): Promise<{ title: string; formats: FormatOption[] }>
   downloadVideo(url: string, formatId: string, outputDir: string, useCookies: boolean): Promise<void>
+  // Hands the local media index to the shell that serves downloaded files to
+  // the webview (Android native module).
+  syncLocalMediaIndex(json: string): Promise<void> | void
   getDownloadsPath(): Promise<string>
   selectFolder(): Promise<string | null>
   openFolder(filePath: string): Promise<void> | void
@@ -44,6 +47,7 @@ export interface MainClient {
 type NouTubeDownloadClient = {
   listFormats?: MainClient['listFormats']
   downloadVideo?: MainClient['downloadVideo']
+  syncLocalMediaIndex?: MainClient['syncLocalMediaIndex']
   getDownloadsPath?: MainClient['getDownloadsPath']
   openFile?: MainClient['openFile']
   updateYtDlp?: MainClient['updateYtDlp']
@@ -80,6 +84,12 @@ export const mainClient: MainClient = {
       throw new Error('download API unavailable')
     }
     return nativeModule.downloadVideo(url, formatId, outputDir, useCookies)
+  },
+  async syncLocalMediaIndex(json) {
+    const nativeModule = viewModule().default as NouTubeDownloadClient
+    // Absent until the native side ships it (Task 3); downloads still work,
+    // the overlay just does not fire yet.
+    await nativeModule.syncLocalMediaIndex?.(json)
   },
   async getDownloadsPath() {
     const nativeModule = viewModule().default as NouTubeDownloadClient

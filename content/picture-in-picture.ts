@@ -1,5 +1,11 @@
 import { isYTMusic, nouStorage } from './utils'
 
+// The local playback overlay's <video> takes over /watch when a download
+// exists, so PiP has to prefer it over YouTube's own element
+// (see local-playback.ts).
+const findVideo = () =>
+  document.querySelector<HTMLVideoElement>('video._nou_local_player') || document.querySelector('video')
+
 const styleId = '_nou_pip'
 const ancestorClass = '_nou_pip_ancestor'
 let transition = 0
@@ -22,7 +28,7 @@ export function preparePictureInPicture() {
 export async function setPictureInPicture(active: boolean) {
   const currentTransition = ++transition
   if (!active) {
-    const wasPlaying = !document.querySelector('video')?.paused
+    const wasPlaying = !findVideo()?.paused
     window.NouTubePip = false
     document.getElementById(styleId)?.remove()
     document.querySelectorAll('.' + ancestorClass).forEach((element) => element.classList.remove(ancestorClass))
@@ -106,7 +112,7 @@ function isPictureInPictureEnabled(): boolean {
 // arrives), so hand it the video it would show ahead of time instead. A zero
 // size means there is nothing to show and PiP stays disarmed.
 function reportPictureInPictureVideo() {
-  const video = document.querySelector('video')
+  const video = findVideo()
   const onVideoPage = !!document.fullscreenElement || document.location.pathname == '/watch'
   const showable =
     isPictureInPictureEnabled() &&
