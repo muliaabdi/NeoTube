@@ -273,6 +273,12 @@ class NouTubeViewModule : Module() {
       return@Coroutine ytDlp().listFormats(url, useCookies)
     }
 
+    // The local playback index: the same JSON the webviews receive, mirrored
+    // into NouLocalMediaRegistry for shouldInterceptRequest lookups.
+    Function("syncLocalMediaIndex") { json: String ->
+      NouLocalMediaRegistry.set(json)
+    }
+
     AsyncFunction("downloadVideo") Coroutine { url: String, formatId: String, outputDir: String, useCookies: Boolean ->
       try {
         val result = ytDlp().downloadVideo(url, formatId, outputDir, useCookies) { progress, etaInSeconds, line ->

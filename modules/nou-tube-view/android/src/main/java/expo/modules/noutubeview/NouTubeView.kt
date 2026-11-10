@@ -598,7 +598,22 @@ class NouTubeView(context: Context, appContext: AppContext) : ExpoView(context, 
           }
 
           override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
-            val host = request.url.host
+            val url = request.url
+            val host = url.host
+            // Local playback: the overlay's <video> asks this virtual origin,
+            // which stands in for the downloaded file (see NouLocalMediaServer).
+            if (host == "noutube-assets.local" && url.path?.startsWith("/downloads/") == true) {
+              val videoId = url.lastPathSegment
+              val localUri = videoId?.let { NouLocalMediaRegistry.getUri(it) }
+              if (localUri != null) {
+                return NouLocalMediaServer.openResponse(
+                  view.context,
+                  localUri,
+                  request.requestHeaders?.get("Range") ?: request.requestHeaders?.get("range"),
+                )
+              }
+              return NouLocalMediaServer.openResponse(view.context, "missing://$videoId", null)
+            }
             if (host in BLOCK_HOSTS || (NouAdBlock.enabled && host in AD_BLOCK_HOSTS)) {
               return WebResourceResponse("text/plain", "utf-8", ByteArrayInputStream(ByteArray(0)))
             }
