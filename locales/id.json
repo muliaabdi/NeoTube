@@ -475,5 +475,11 @@
     "openYouTube": "Buka YouTube",
     "openYouTubeMusic": "Buka YouTube Music",
     "saveCurrentPage": "Simpan halaman saat ini"
+  },
+  "downloads": {
+    "title": "Unduhan",
+    "noDownloads": "Belum ada video terunduh",
+    "videos": "video",
+    "delete": "Hapus unduhan"
   }
 }

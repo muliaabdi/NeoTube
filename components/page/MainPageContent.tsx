@@ -50,6 +50,7 @@ import { PlayerFrame } from './PlayerFrame'
 import { GoogleLoginNotice } from './GoogleLoginNotice'
 import {
   closePlayer,
+  hidePlayer,
   isSplitWatchEnabled,
   isWatchUrl,
   openInPlayer,
@@ -161,9 +162,19 @@ const DesktopTabView: React.FC<{
     if (!readyRef.current) return
     const settings = getContentSettingsSnapshot()
     const value = JSON.stringify(settings)
+    const literal = JSON.stringify(value)
     executeQuietly(
       webviewRef.current,
-      `localStorage.setItem('nou:settings', '${value}'); window.NouTube?.setSettings?.(${value})`,
+      `localStorage.setItem('nou:settings', ${literal}); window.NouTube?.setSettings?.(${value})`,
+    )
+  }, [])
+
+  const syncLocalVideosToWebview = useCallback(() => {
+    if (!readyRef.current) return
+    const literal = JSON.stringify(JSON.stringify(localVideos$.get()))
+    executeQuietly(
+      webviewRef.current,
+      `localStorage.setItem('nou:downloads', ${literal}); window.dispatchEvent(new Event('noutube:downloads'))`,
     )
   }, [])
 
@@ -233,6 +244,7 @@ const DesktopTabView: React.FC<{
       syncUserStylesToWebview()
       syncBlocklistToWebview()
       syncSettingsToWebview()
+      syncLocalVideosToWebview()
       refreshCanGoBack()
     }
     const onStartLoading = () => tabs$.setTabLoading(true, index)
@@ -294,6 +306,7 @@ const DesktopTabView: React.FC<{
     onMessage,
     refreshCanGoBack,
     syncBlocklistToWebview,
+    syncLocalVideosToWebview,
     syncSettingsToWebview,
     syncUserStylesToWebview,
     toggleShorts,
@@ -306,10 +319,12 @@ const DesktopTabView: React.FC<{
   useObserveEffect(settings$.playbackQuality, () => syncSettingsToWebview())
   useObserveEffect(settings$.disableAutoplay, () => syncSettingsToWebview())
   useObserveEffect(settings$.miniPlayer, () => syncSettingsToWebview())
+  useObserveEffect(settings$.localPlayback, () => syncSettingsToWebview())
   useObserveEffect(settings$.pictureInPicture, () => syncSettingsToWebview())
   useObserveEffect(settings$.showDislikes, () => syncSettingsToWebview())
   useObserveEffect(settings$.showOriginalVideoTitle, () => syncSettingsToWebview())
   useObserveEffect(settings$.doubleTapToToggleHeader, () => syncSettingsToWebview())
+  useObserveEffect(localVideos$, () => syncLocalVideosToWebview())
   useObserveEffect(userStyles$, () => syncUserStylesToWebview())
   useObserveEffect(blocklist$, () => syncBlocklistToWebview())
   useEffect(() => {
@@ -537,9 +552,10 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
   const syncSettingsToWebview = useCallback(() => {
     const settings = getContentSettingsSnapshot()
     const value = JSON.stringify(settings)
+    const literal = JSON.stringify(value)
     for (const ref of nativeViews()) {
       ref.executeJavaScript(
-        `localStorage.setItem('nou:settings', '${value}'); window.NouTube?.setSettings?.(${value})`,
+        `localStorage.setItem('nou:settings', ${literal}); window.NouTube?.setSettings?.(${value})`,
       )
     }
     if (isWeb) {
@@ -702,6 +718,7 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
             syncUserStylesToWebview()
             syncBlocklistToWebview()
             syncSettingsToWebview()
+            syncLocalVideosToWebview()
           }
           break
         case 'add-queue':
@@ -841,6 +858,7 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
       hideShorts,
       hideToolbarWhenScrolled,
       syncSettingsToWebview,
+      syncLocalVideosToWebview,
       syncBlocklistToWebview,
       syncUserStylesToWebview,
       toggleShorts,
@@ -1007,6 +1025,7 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
   useObserveEffect(settings$.playbackQuality, () => syncSettingsToWebview())
   useObserveEffect(settings$.disableAutoplay, () => syncSettingsToWebview())
   useObserveEffect(settings$.miniPlayer, () => syncSettingsToWebview())
+  useObserveEffect(settings$.localPlayback, () => syncSettingsToWebview())
   useObserveEffect(settings$.pictureInPicture, () => syncSettingsToWebview())
   useObserveEffect(settings$.showDislikes, () => syncSettingsToWebview())
   useObserveEffect(settings$.showOriginalVideoTitle, () => syncSettingsToWebview())

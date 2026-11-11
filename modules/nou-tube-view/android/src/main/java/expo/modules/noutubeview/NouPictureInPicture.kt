@@ -92,8 +92,10 @@ object NouPictureInPicture {
       this.view = view
     }
     if (size == videoSize) {
+      Log.d(TAG, "setVideo ignored (same size) view=${view.hashCode()} size=$size")
       return
     }
+    Log.d(TAG, "setVideo view=${view.hashCode()} size=$size")
     videoSize = size
     updateParams(view.currentActivity ?: return)
   }
@@ -116,6 +118,7 @@ object NouPictureInPicture {
     }
     try {
       activity.setPictureInPictureParams(paramsFor(videoSize ?: (16 to 9), videoSize != null))
+      Log.d(TAG, "updateParams armed=${videoSize != null} size=$videoSize")
     } catch (error: Exception) {
       Log.w(TAG, "Unable to update picture-in-picture params", error)
     }
@@ -133,6 +136,11 @@ object NouPictureInPicture {
   }
 
   fun onUserLeaveHint(activity: Activity) {
+    Log.d(
+      TAG,
+      "onUserLeaveHint supported=${isSupported(activity)} inPip=${activity.isInPictureInPictureMode} " +
+        "videoSize=$videoSize view=${view != null} autoEnter=$autoEnterSupported",
+    )
     if (!isSupported(activity) || activity.isInPictureInPictureMode || videoSize == null) {
       return
     }
@@ -167,6 +175,7 @@ object NouPictureInPicture {
   }
 
   fun onModeChanged(activity: Activity, inPictureInPicture: Boolean) {
+    Log.d(TAG, "onModeChanged inPip=$inPictureInPicture active=$active view=${view != null}")
     if (active == inPictureInPicture) {
       return
     }
@@ -178,9 +187,9 @@ object NouPictureInPicture {
       releaseWindow()
     }
     view?.webView?.evaluateJavascript(
-      "window.NouTube?.setPictureInPicture?.($inPictureInPicture)?.catch?.(console.error)",
-      null,
-    )
+      "window.NouTube?.setPictureInPicture?.($inPictureInPicture)?.catch?.(console.error), " +
+        "JSON.stringify({hook: typeof window.NouTube?.setPictureInPicture, prepared: !!window.NouTubePip})",
+    ) { result -> Log.d(TAG, "page setPictureInPicture -> $result") }
   }
 
   // React Native lays its tree out from the shadow tree of a resumed activity,
@@ -194,8 +203,12 @@ object NouPictureInPicture {
   // circle in onMeasure and draws by it, and React Native runs no measure pass
   // to correct it.
   private fun takeOverWindow(activity: Activity) {
-    val view = view ?: return
+    val view = view ?: run {
+      Log.d(TAG, "takeOverWindow skipped: no view registered")
+      return
+    }
     val decor = activity.window?.decorView ?: return
+    Log.d(TAG, "takeOverWindow decor=${decor.width}x${decor.height}")
     decorView = decor
     hideChrome()
     // The webview alone is not enough: its ancestors keep the bounds React
@@ -238,6 +251,7 @@ object NouPictureInPicture {
       child = parent
       parent = parent.parent as? ViewGroup
     }
+    Log.d(TAG, "hideChrome hidden=${hiddenViews.size} reachedDecor=${parent === decor}")
   }
 
   private fun fillWindow() {

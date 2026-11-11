@@ -2,9 +2,9 @@
   "name": "neotube",
   "private": true,
   "main": "index.js",
-  "version": "1.0.1",
-  "versionCode": 88,
-  "buildNumber": "8",
+  "version": "1.0.2",
+  "versionCode": 89,
+  "buildNumber": "9",
   "scripts": {
     "bundle": "bun build --target browser content/main.ts --outfile assets/scripts/main.bjs",
     "bundle:es": "esbuild --bundle content/main.ts --minify --outfile=assets/scripts/main.bjs",

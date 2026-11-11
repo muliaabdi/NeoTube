@@ -988,6 +988,7 @@ function preparePictureInPicture() {
   window.NouTubePip = true;
 }
 async function setPictureInPicture(active) {
+  console.log("[NouTube PiP] setPictureInPicture", active);
   const currentTransition = ++transition;
   if (!active) {
     const wasPlaying = !findVideo()?.paused;
@@ -1070,6 +1071,7 @@ function reportPictureInPictureVideo() {
     return;
   }
   reported = key;
+  console.log("[NouTube PiP] report", key, "enabled=", isPictureInPictureEnabled());
   window.NouTubeI?.setPictureInPictureVideo?.(bridgeToken(), size[0], size[1]);
 }
 function watchPictureInPictureVideo() {
@@ -1084,7 +1086,7 @@ function watchPictureInPictureVideo() {
   }
   reportPictureInPictureVideo();
 }
-// node_modules/es-toolkit/dist/error/AbortError.mjs
+// .worktrees/local-playback/node_modules/es-toolkit/dist/error/AbortError.mjs
 class AbortError extends Error {
   constructor(message = "The operation was aborted") {
     super(message);
@@ -1092,7 +1094,7 @@ class AbortError extends Error {
   }
 }
 
-// node_modules/es-toolkit/dist/promise/delay.mjs
+// .worktrees/local-playback/node_modules/es-toolkit/dist/promise/delay.mjs
 function delay(ms, { signal } = {}) {
   return new Promise((resolve, reject) => {
     const abortError = () => {
@@ -1113,7 +1115,7 @@ function delay(ms, { signal } = {}) {
   });
 }
 
-// node_modules/es-toolkit/dist/function/retry.mjs
+// .worktrees/local-playback/node_modules/es-toolkit/dist/function/retry.mjs
 var DEFAULT_DELAY = 0;
 var DEFAULT_RETRIES = Number.POSITIVE_INFINITY;
 var DEFAULT_SHOULD_RETRY = () => true;
@@ -1151,7 +1153,7 @@ async function retry(func, _options) {
   }
   throw error;
 }
-// node_modules/es-toolkit/dist/function/debounce.mjs
+// .worktrees/local-playback/node_modules/es-toolkit/dist/function/debounce.mjs
 function debounce(func, debounceMs, { signal, edges } = {}) {
   let pendingThis = undefined;
   let pendingArgs = null;
@@ -1213,7 +1215,7 @@ function debounce(func, debounceMs, { signal, edges } = {}) {
   return debounced;
 }
 
-// node_modules/es-toolkit/dist/function/throttle.mjs
+// .worktrees/local-playback/node_modules/es-toolkit/dist/function/throttle.mjs
 function throttle(func, throttleMs, { signal, edges = ["leading", "trailing"] } = {}) {
   let pendingAt = null;
   const debounced = debounce(function(...args) {
@@ -2690,6 +2692,11 @@ function findSplitLink(event) {
 }
 
 // content/swipe-gesture.ts
+function isPointInsideRect(x, y, rect) {
+  if (!rect || rect.width <= 0 || rect.height <= 0)
+    return false;
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+}
 function isSwipeDownToMini(params) {
   const { startY, deltaX, deltaY, timeMs, maxStartY } = params;
   if (timeMs > 800)
@@ -3044,17 +3051,38 @@ function installMiniplayerGuard() {
     document.addEventListener("DOMContentLoaded", start, { once: true });
   }
 }
+var PLAYER_SWIPE_SELECTOR = "#movie_player, .html5-video-player, #player, #player-container-id, #player-control-overlay, #_nou_local_overlay";
+var SWIPE_IGNORED_SELECTOR = 'input[type="range"], ._nou_lp_seek, .ytPlayerProgressBarHost, .ytp-progress-bar-container';
+function isInsidePlayerSwipeArea(target, clientX, clientY) {
+  const el = target instanceof Element ? target : document.elementFromPoint(clientX, clientY);
+  if (!el || el.closest(SWIPE_IGNORED_SELECTOR))
+    return false;
+  const playerTarget = el.closest(PLAYER_SWIPE_SELECTOR);
+  if (!playerTarget)
+    return false;
+  const boundsTarget = document.querySelector("#_nou_local_overlay, #movie_player, .html5-video-player") || playerTarget;
+  return isPointInsideRect(clientX, clientY, boundsTarget.getBoundingClientRect());
+}
 function installSwipeDownToMini() {
   let startX = 0;
   let startY = 0;
   let startTime = 0;
   window.addEventListener("touchstart", (e) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      startX = touch.clientX;
-      startY = touch.clientY;
-      startTime = Date.now();
+    if (e.touches.length !== 1) {
+      startTime = 0;
+      return;
     }
+    const touch = e.touches[0];
+    if (!isInsidePlayerSwipeArea(e.target, touch.clientX, touch.clientY)) {
+      startTime = 0;
+      return;
+    }
+    startX = touch.clientX;
+    startY = touch.clientY;
+    startTime = Date.now();
+  }, { passive: true, capture: true });
+  window.addEventListener("touchcancel", () => {
+    startTime = 0;
   }, { passive: true, capture: true });
   window.addEventListener("touchend", (e) => {
     if (e.changedTouches.length === 1 && startTime > 0) {
@@ -5654,6 +5682,7 @@ function shouldTriggerLocalPlayback(pathname, videoId, downloads, settingEnabled
   return pathname === "/watch" && settingEnabled && Boolean(downloads[videoId] && !downloads[videoId].audioOnly);
 }
 var activeVideoId = null;
+var bypassedVideoId = null;
 var pendingPosition = null;
 var youtubeVideo = () => {
   for (const video of Array.from(document.querySelectorAll("video"))) {
@@ -5766,15 +5795,17 @@ function unmountLocalOverlay(fallbackToYoutube = false) {
   }
 }
 function mountLocalOverlay(videoId) {
-  if (activeVideoId === videoId)
+  if (activeVideoId === videoId && document.getElementById(CONTAINER_ID)?.isConnected)
     return;
   unmountLocalOverlay(false);
   const player = document.querySelector("#movie_player");
   if (!player)
     return;
+  if (getComputedStyle(player).position === "static") {
+    player.style.position = "relative";
+  }
   const container = buildOverlay2(videoId);
   const video = container.querySelector("video");
-  const bar = container.querySelector("._nou_lp_bar");
   const timeLabel = container.querySelector("._nou_lp_time");
   const seek = container.querySelector("._nou_lp_seek");
   const toggle = container.querySelector('[data-nou-action="toggle"]');
@@ -5799,7 +5830,10 @@ function mountLocalOverlay(videoId) {
       });
     }
   };
-  video.addEventListener("error", () => unmountLocalOverlay(true));
+  video.addEventListener("error", () => {
+    bypassedVideoId = videoId;
+    unmountLocalOverlay(true);
+  });
   video.addEventListener("loadedmetadata", () => {
     if (video.duration)
       seek.max = "1000";
@@ -5836,6 +5870,7 @@ function mountLocalOverlay(videoId) {
       video.playbackRate = next;
       speed.textContent = `${next}×`;
     } else if (action === "youtube") {
+      bypassedVideoId = videoId;
       unmountLocalOverlay(true);
       return;
     } else if (event.target === video) {
@@ -5846,7 +5881,7 @@ function mountLocalOverlay(videoId) {
       else
         video.pause();
     }
-    bar.classList.remove("_nou_lp_hidden");
+    container.classList.remove("_nou_lp_hidden");
   });
   seek.addEventListener("input", () => {
     seeking = true;
@@ -5857,12 +5892,12 @@ function mountLocalOverlay(videoId) {
     if (video.duration)
       video.currentTime = Number(seek.value) / 1000 * video.duration;
   });
-  video.addEventListener("click", () => bar.classList.remove("_nou_lp_hidden"));
+  video.addEventListener("click", () => container.classList.remove("_nou_lp_hidden"));
   let hideTimer = 0;
   container.addEventListener("pointermove", () => {
-    bar.classList.remove("_nou_lp_hidden");
+    container.classList.remove("_nou_lp_hidden");
     window.clearTimeout(hideTimer);
-    hideTimer = window.setTimeout(() => bar.classList.add("_nou_lp_hidden"), 2500);
+    hideTimer = window.setTimeout(() => container.classList.add("_nou_lp_hidden"), 2500);
   });
   const yt = youtubeVideo();
   if (yt) {
@@ -5886,10 +5921,13 @@ function mountLocalOverlay(videoId) {
 }
 function checkLocalPlayback() {
   const videoId = videoIdFromUrl(location.pathname + location.search);
+  if (videoId !== bypassedVideoId) {
+    bypassedVideoId = null;
+  }
   const downloads = parseJson(nouStorage.getItem(DOWNLOADS_KEY), {});
   const settings = parseJson(nouStorage.getItem(SETTINGS_KEY2), {});
   const enabled = settings.localPlayback !== false;
-  if (videoId && shouldTriggerLocalPlayback(location.pathname, videoId, downloads, enabled)) {
+  if (videoId && videoId !== bypassedVideoId && shouldTriggerLocalPlayback(location.pathname, videoId, downloads, enabled)) {
     mountLocalOverlay(videoId);
   } else {
     unmountLocalOverlay(false);
@@ -5897,10 +5935,39 @@ function checkLocalPlayback() {
 }
 function installLocalPlayback() {
   window.NouTube.setLocalPosition = setLocalPosition;
-  for (const type of ["yt-navigate-finish", "popstate", "noutube:downloads"]) {
-    window.addEventListener(type, () => window.setTimeout(checkLocalPlayback, 0));
+  let scheduled = 0;
+  const scheduleCheck = () => {
+    if (scheduled)
+      return;
+    scheduled = window.setTimeout(() => {
+      scheduled = 0;
+      checkLocalPlayback();
+    }, 0);
+  };
+  for (const type of ["yt-navigate-finish", "popstate", "noutube:settings"]) {
+    window.addEventListener(type, scheduleCheck);
   }
-  const start = () => checkLocalPlayback();
+  window.addEventListener("noutube:downloads", () => {
+    bypassedVideoId = null;
+    scheduleCheck();
+  });
+  const start = () => {
+    checkLocalPlayback();
+    const observer = new MutationObserver(() => {
+      const videoId = videoIdFromUrl(location.pathname + location.search);
+      if (!videoId) {
+        if (activeVideoId)
+          unmountLocalOverlay(false);
+        return;
+      }
+      if (videoId !== bypassedVideoId && !document.getElementById(CONTAINER_ID)?.isConnected) {
+        scheduleCheck();
+      }
+    });
+    if (document.documentElement) {
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+    }
+  };
   if (document.documentElement) {
     start();
   } else {

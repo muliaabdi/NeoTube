@@ -32,6 +32,7 @@ export interface MainClient {
   selectFolder(): Promise<string | null>
   openFolder(filePath: string): Promise<void> | void
   openFile(filePath: string): Promise<void> | void
+  deleteLocalMedia(uri: string): Promise<number>
   updateYtDlp(): Promise<void>
   fetchFeed(url: string): Promise<{ ok: boolean; status: number; statusText: string; body: string }>
   setCookie(cookie: string): Promise<void>
@@ -50,6 +51,7 @@ type NouTubeDownloadClient = {
   syncLocalMediaIndex?: MainClient['syncLocalMediaIndex']
   getDownloadsPath?: MainClient['getDownloadsPath']
   openFile?: MainClient['openFile']
+  deleteLocalMedia?: MainClient['deleteLocalMedia']
   updateYtDlp?: MainClient['updateYtDlp']
   discordLogin?: MainClient['discordLogin']
   discordLogout?: MainClient['discordLogout']
@@ -112,6 +114,13 @@ export const mainClient: MainClient = {
       return
     }
     return nativeModule.openFile(filePath)
+  },
+  async deleteLocalMedia(uri) {
+    const nativeModule = viewModule().default as NouTubeDownloadClient
+    if (typeof nativeModule.deleteLocalMedia !== 'function') {
+      throw new Error('delete API unavailable')
+    }
+    return nativeModule.deleteLocalMedia(uri)
   },
   async updateYtDlp() {
     const nativeModule = viewModule().default as NouTubeDownloadClient

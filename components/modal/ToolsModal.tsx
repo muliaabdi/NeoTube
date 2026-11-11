@@ -8,7 +8,7 @@ import { NouText } from '../NouText'
 import { NouButton } from '../button/NouButton'
 import { NouSwitch } from '../switch/NouSwitch'
 import { mainClient } from '@/lib/main-client'
-import { downloads$ } from '@/states/downloads'
+import { downloads$, removeDownload } from '@/states/downloads'
 import { t } from 'i18next'
 import type { FormatOption } from '@/lib/main-client'
 import { findPinnedFormats, togglePinnedFormat } from '@/lib/download-format'
@@ -87,10 +87,10 @@ export const ToolsModal = () => {
     setFormats([])
   }, [isOpen, toolsModalUrl, loadFormats])
 
-  const openSavedFile = (savedPath: string) => {
-    const targetUrl = loadedUrl || toolsModalUrl || url
+  const openSavedFile = (savedPath: string, itemUrl?: string) => {
+    const targetUrl = itemUrl || loadedUrl || toolsModalUrl || url
     if (targetUrl) {
-      ui$.toolsModalOpen.set(false)
+      onClose()
       updateUrl(targetUrl)
       return
     }
@@ -273,7 +273,7 @@ export const ToolsModal = () => {
                     <Pressable
                       className="flex-1 gap-1"
                       disabled={d.phase !== 'done' || !d.savedPath}
-                      onPress={() => openSavedFile(d.savedPath)}
+                      onPress={() => openSavedFile(d.savedPath, dUrl)}
                     >
                       <NouText className="text-sm font-semibold text-zinc-900 dark:text-zinc-100" numberOfLines={2}>
                         {d.title || dUrl}
@@ -312,7 +312,7 @@ export const ToolsModal = () => {
                         </View>
                         {!!d.savedPath && (
                           <Pressable
-                            onPress={() => openSavedFile(d.savedPath)}
+                            onPress={() => openSavedFile(d.savedPath, dUrl)}
                             className="bg-zinc-200 dark:bg-zinc-800 px-3 py-1.5 rounded-lg active:bg-zinc-300 dark:active:bg-zinc-700"
                           >
                             <NouText className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
@@ -332,7 +332,7 @@ export const ToolsModal = () => {
                         )}
                         <Pressable
                           onPress={() => {
-                            downloads$[dUrl].delete()
+                            removeDownload(dUrl)
                           }}
                           className="bg-zinc-200 dark:bg-zinc-800 px-3 py-1.5 rounded-lg active:bg-zinc-300 dark:active:bg-zinc-700"
                         >
@@ -351,7 +351,7 @@ export const ToolsModal = () => {
                       <View className="flex-row justify-end mt-1">
                         <Pressable
                           onPress={() => {
-                            downloads$[dUrl].delete()
+                            removeDownload(dUrl)
                           }}
                           className="bg-zinc-200 dark:bg-zinc-800 px-3 py-1.5 rounded-lg active:bg-zinc-300 dark:active:bg-zinc-700"
                         >

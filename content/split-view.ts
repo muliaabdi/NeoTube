@@ -2,7 +2,7 @@ import { emit } from './utils'
 import { isWatchUrl } from '../lib/split-watch-url'
 import { installSplitPlayerWindow } from './split-player-window'
 import { findSplitLink } from './split-link'
-import { isSwipeDownToMini } from './swipe-gesture'
+import { isPointInsideRect, isSwipeDownToMini } from './swipe-gesture'
 
 // Page half of the split watch view (see lib/split-view.ts). Two webviews are
 // live at once and each one only handles the pages it owns, so every link that
@@ -472,7 +472,21 @@ function installMiniplayerGuard() {
   }
 }
 
-// Recognizes a swipe down on the player area to collapse it into the native mini player
+const PLAYER_SWIPE_SELECTOR =
+  '#movie_player, .html5-video-player, #player, #player-container-id, #player-control-overlay, #_nou_local_overlay'
+const SWIPE_IGNORED_SELECTOR =
+  'input[type="range"], ._nou_lp_seek, .ytPlayerProgressBarHost, .ytp-progress-bar-container'
+
+function isInsidePlayerSwipeArea(target: EventTarget | null, clientX: number, clientY: number): boolean {
+  const el = target instanceof Element ? target : document.elementFromPoint(clientX, clientY)
+  if (!el || el.closest(SWIPE_IGNORED_SELECTOR)) return false
+  const playerTarget = el.closest(PLAYER_SWIPE_SELECTOR)
+  if (!playerTarget) return false
+  const boundsTarget = document.querySelector('#_nou_local_overlay, #movie_player, .html5-video-player') || playerTarget
+  return isPointInsideRect(clientX, clientY, boundsTarget.getBoundingClientRect())
+}
+
+// Recognizes a swipe down on the video player area to collapse it into the native mini player
 function installSwipeDownToMini() {
   let startX = 0
   let startY = 0
@@ -481,12 +495,26 @@ function installSwipeDownToMini() {
   window.addEventListener(
     'touchstart',
     (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        const touch = e.touches[0]
-        startX = touch.clientX
-        startY = touch.clientY
-        startTime = Date.now()
+      if (e.touches.length !== 1) {
+        startTime = 0
+        return
       }
+      const touch = e.touches[0]
+      if (!isInsidePlayerSwipeArea(e.target, touch.clientX, touch.clientY)) {
+        startTime = 0
+        return
+      }
+      startX = touch.clientX
+      startY = touch.clientY
+      startTime = Date.now()
+    },
+    { passive: true, capture: true },
+  )
+
+  window.addEventListener(
+    'touchcancel',
+    () => {
+      startTime = 0
     },
     { passive: true, capture: true },
   )

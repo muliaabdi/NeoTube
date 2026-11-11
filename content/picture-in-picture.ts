@@ -26,6 +26,7 @@ export function preparePictureInPicture() {
 }
 
 export async function setPictureInPicture(active: boolean) {
+  console.log('[NouTube PiP] setPictureInPicture', active)
   const currentTransition = ++transition
   if (!active) {
     const wasPlaying = !findVideo()?.paused
@@ -128,6 +129,7 @@ function reportPictureInPictureVideo() {
     return
   }
   reported = key
+  console.log('[NouTube PiP] report', key, 'enabled=', isPictureInPictureEnabled())
   window.NouTubeI?.setPictureInPictureVideo?.(bridgeToken(), size[0], size[1])
 }
 

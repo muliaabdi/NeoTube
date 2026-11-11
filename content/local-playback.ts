@@ -48,6 +48,7 @@ export function shouldTriggerLocalPlayback(
 /* --- overlay --- */
 
 let activeVideoId: string | null = null
+let bypassedVideoId: string | null = null
 let pendingPosition: ((seconds: number) => void) | null = null
 
 const overlayVideo = () => document.querySelector<HTMLVideoElement>('video.' + VIDEO_CLASS)
@@ -170,15 +171,17 @@ function unmountLocalOverlay(fallbackToYoutube = false) {
 
 function mountLocalOverlay(videoId: string) {
   // The downloads sync and navigation checks both rerun on the same page;
-  // rebuilding would restart the video mid-play.
-  if (activeVideoId === videoId) return
+  // rebuilding would restart the video mid-play unless YouTube detached it.
+  if (activeVideoId === videoId && document.getElementById(CONTAINER_ID)?.isConnected) return
   unmountLocalOverlay(false)
   const player = document.querySelector<HTMLElement>('#movie_player')
   if (!player) return
+  if (getComputedStyle(player).position === 'static') {
+    player.style.position = 'relative'
+  }
 
   const container = buildOverlay(videoId)
   const video = container.querySelector('video')!
-  const bar = container.querySelector('._nou_lp_bar') as HTMLElement
   const timeLabel = container.querySelector('._nou_lp_time')!
   const seek = container.querySelector<HTMLInputElement>('._nou_lp_seek')!
   const toggle = container.querySelector<HTMLButtonElement>('[data-nou-action="toggle"]')!
@@ -208,8 +211,11 @@ function mountLocalOverlay(videoId: string) {
   }
 
   // The file is gone (deleted, renamed, another device's index): fall back to
-  // streaming rather than showing a black box.
-  video.addEventListener('error', () => unmountLocalOverlay(true))
+  // streaming rather than showing a black box, and don't loop on the same video.
+  video.addEventListener('error', () => {
+    bypassedVideoId = videoId
+    unmountLocalOverlay(true)
+  })
   video.addEventListener('loadedmetadata', () => {
     if (video.duration) seek.max = '1000'
     renderTime()
@@ -238,14 +244,15 @@ function mountLocalOverlay(videoId: string) {
       video.playbackRate = next
       speed.textContent = `${next}×`
     } else if (action === 'youtube') {
-      // Explicitly hand control back to the YouTube player.
+      // Explicitly hand control back to the YouTube player for this video.
+      bypassedVideoId = videoId
       unmountLocalOverlay(true)
       return
     } else if (event.target === video) {
       if (video.paused) video.play().catch(() => undefined)
       else video.pause()
     }
-    bar.classList.remove('_nou_lp_hidden')
+    container.classList.remove('_nou_lp_hidden')
   })
   seek.addEventListener('input', () => {
     seeking = true
@@ -256,12 +263,12 @@ function mountLocalOverlay(videoId: string) {
     if (video.duration) video.currentTime = (Number(seek.value) / 1000) * video.duration
   })
   // Tap the video to toggle the bar (mobile), mouse move to reveal (desktop).
-  video.addEventListener('click', () => bar.classList.remove('_nou_lp_hidden'))
+  video.addEventListener('click', () => container.classList.remove('_nou_lp_hidden'))
   let hideTimer = 0
   container.addEventListener('pointermove', () => {
-    bar.classList.remove('_nou_lp_hidden')
+    container.classList.remove('_nou_lp_hidden')
     window.clearTimeout(hideTimer)
-    hideTimer = window.setTimeout(() => bar.classList.add('_nou_lp_hidden'), 2500)
+    hideTimer = window.setTimeout(() => container.classList.add('_nou_lp_hidden'), 2500)
   })
 
   // The YouTube player behind the overlay stays paused and muted from the
@@ -295,10 +302,13 @@ function mountLocalOverlay(videoId: string) {
 
 function checkLocalPlayback() {
   const videoId = videoIdFromUrl(location.pathname + location.search)
+  if (videoId !== bypassedVideoId) {
+    bypassedVideoId = null
+  }
   const downloads = parseJson(nouStorage.getItem(DOWNLOADS_KEY), {}) as Downloads
   const settings = parseJson(nouStorage.getItem(SETTINGS_KEY), {}) as { localPlayback?: boolean }
   const enabled = settings.localPlayback !== false
-  if (videoId && shouldTriggerLocalPlayback(location.pathname, videoId, downloads, enabled)) {
+  if (videoId && videoId !== bypassedVideoId && shouldTriggerLocalPlayback(location.pathname, videoId, downloads, enabled)) {
     mountLocalOverlay(videoId)
   } else {
     unmountLocalOverlay(false)
@@ -307,13 +317,39 @@ function checkLocalPlayback() {
 
 export function installLocalPlayback() {
   ;(window.NouTube as any).setLocalPosition = setLocalPosition
-  // The overlay has to survive YouTube's own SPA redraws of #movie_player's
-  // children, so the check reruns on every navigation rather than mounting
-  // once; mountLocalOverlay itself is idempotent-ish (it rebuilds on change).
-  for (const type of ['yt-navigate-finish', 'popstate', 'noutube:downloads']) {
-    window.addEventListener(type, () => window.setTimeout(checkLocalPlayback, 0))
+  let scheduled = 0
+  const scheduleCheck = () => {
+    if (scheduled) return
+    scheduled = window.setTimeout(() => {
+      scheduled = 0
+      checkLocalPlayback()
+    }, 0)
   }
-  const start = () => checkLocalPlayback()
+  // The overlay has to survive YouTube's own SPA redraws of #movie_player's
+  // children and async #movie_player creation after document load.
+  for (const type of ['yt-navigate-finish', 'popstate', 'noutube:settings']) {
+    window.addEventListener(type, scheduleCheck)
+  }
+  window.addEventListener('noutube:downloads', () => {
+    bypassedVideoId = null
+    scheduleCheck()
+  })
+  const start = () => {
+    checkLocalPlayback()
+    const observer = new MutationObserver(() => {
+      const videoId = videoIdFromUrl(location.pathname + location.search)
+      if (!videoId) {
+        if (activeVideoId) unmountLocalOverlay(false)
+        return
+      }
+      if (videoId !== bypassedVideoId && !document.getElementById(CONTAINER_ID)?.isConnected) {
+        scheduleCheck()
+      }
+    })
+    if (document.documentElement) {
+      observer.observe(document.documentElement, { childList: true, subtree: true })
+    }
+  }
   if (document.documentElement) {
     start()
   } else {

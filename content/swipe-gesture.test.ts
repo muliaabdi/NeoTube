@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { isSwipeDownToMini } from './swipe-gesture'
+import { isPointInsideRect, isSwipeDownToMini } from './swipe-gesture'
 
 describe('isSwipeDownToMini', () => {
   it('detects a clear vertical swipe down from near the top/player area', () => {
@@ -23,5 +23,23 @@ describe('isSwipeDownToMini', () => {
   it('rejects swipes that start too far down in comments/description', () => {
     // window height typically > 600, player is in top 40%
     expect(isSwipeDownToMini({ startY: 650, deltaX: 5, deltaY: 100, timeMs: 250, maxStartY: 450 })).toBe(false)
+  })
+})
+
+describe('isPointInsideRect', () => {
+  const playerRect = { left: 0, right: 400, top: 0, bottom: 225, width: 400, height: 225 }
+
+  it('accepts touches inside the player bounds', () => {
+    expect(isPointInsideRect(150, 120, playerRect)).toBe(true)
+  })
+
+  it('rejects touches outside the player bounds (comments/feed below)', () => {
+    expect(isPointInsideRect(150, 350, playerRect)).toBe(false)
+    expect(isPointInsideRect(450, 120, playerRect)).toBe(false)
+  })
+
+  it('rejects empty or missing rects', () => {
+    expect(isPointInsideRect(10, 10, { left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0 })).toBe(false)
+    expect(isPointInsideRect(10, 10, null)).toBe(false)
   })
 })

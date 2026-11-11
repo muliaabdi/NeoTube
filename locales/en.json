@@ -499,5 +499,11 @@
     "openYouTube": "Open YouTube",
     "openYouTubeMusic": "Open YouTube Music",
     "saveCurrentPage": "Save current page"
+  },
+  "downloads": {
+    "title": "Downloads",
+    "noDownloads": "No downloaded videos",
+    "videos": "videos",
+    "delete": "Delete download"
   }
 }

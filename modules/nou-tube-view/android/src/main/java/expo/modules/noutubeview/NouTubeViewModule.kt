@@ -314,6 +314,17 @@ class NouTubeViewModule : Module() {
       }
     }
 
+    AsyncFunction("deleteLocalMedia") { uri: String ->
+      val context = appContext.reactContext ?: throw Exception("Application context is unavailable")
+      if (uri.startsWith("content://")) {
+        context.contentResolver.delete(android.net.Uri.parse(uri), null, null)
+      } else {
+        val file = java.io.File(uri)
+        if (file.exists() && !file.delete()) throw Exception("Failed to delete $uri")
+        1
+      }
+    }
+
     AsyncFunction("openFile") { path: String ->
       val context = appContext.reactContext ?: throw Exception("Application context is unavailable")
       val uri = if (path.startsWith("content://") || path.startsWith("file://")) {

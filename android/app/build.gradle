@@ -103,8 +103,8 @@ android {
         applicationId 'com.neotube.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 88
-        versionName "1.0.1"
+        versionCode 89
+        versionName "1.0.2"
 // @generated begin expo-localization-supported-locales - expo prebuild (DO NOT MODIFY) sync-fefc0efb7190274e8806633196c4a475fee8245b
         resourceConfigurations += ["b+en", "b+de", "b+es", "b+fr", "b+gl", "b+in", "b+it", "b+ja", "b+pl", "b+pt", "b+pt+BR", "b+ru", "b+tr", "b+uk", "b+vi", "b+zh+Hans", "zh-rCN", "b+zh+Hant", "zh-rTW", "zh-rHK"]
 // @generated end expo-localization-supported-locales
@@ -124,6 +124,9 @@ android {
             signingConfig signingConfigs.debug
         }
         release { 
+            // ponytail: ditandatangani debug keystore — cukup untuk install
+            // manual/update checker; ganti keystore rilis bila masuk Play Store.
+            signingConfig signingConfigs.debug
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds
