@@ -33,7 +33,7 @@ expo-env.d.ts
 
 /android
 /ios
-assets/scripts/
+!assets/scripts/main.bjs
 modules/*/android/build/
 
 *-env.d.ts
