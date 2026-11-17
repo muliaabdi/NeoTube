@@ -104,6 +104,7 @@ export const builtinUserStyleDefinitions: BuiltinUserStyleDefinition[] = [
         max-height: 92vh !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
+        display: flex !important;
         flex-direction: column !important;
         border-radius: 20px 0 0 20px !important;
         background: rgba(18, 18, 18, 0.9) !important;
@@ -116,11 +117,14 @@ export const builtinUserStyleDefinitions: BuiltinUserStyleDefinition[] = [
         z-index: 9999 !important;
       }
       ytm-pivot-bar-item-renderer {
+        display: flex !important;
+        flex: 0 0 auto !important;
         flex-direction: column !important;
         justify-content: center !important;
         align-items: center !important;
         width: 56px !important;
         height: 52px !important;
+        min-height: 52px !important;
         padding: 4px 0 !important;
       }
       .pivot-bar-item-title {
