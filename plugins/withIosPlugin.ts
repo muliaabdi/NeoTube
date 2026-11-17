@@ -1,5 +1,8 @@
+import * as fs from 'fs'
+import * as path from 'path'
 import {
   ConfigPlugin,
+  withDangerousMod,
   withEntitlementsPlist,
   withPodfile,
 } from '@expo/config-plugins'
@@ -45,7 +48,41 @@ const withoutPushEntitlement: ConfigPlugin = (config) =>
     return config
   })
 
+// react-native 0.88 changed RCTTurboModuleWithJSIBindings to pass `callInvoker:`,
+// which react-native-nitro-modules 0.35.x does not implement yet, causing Nitro
+// JSI bindings to never install on iOS startup.
+const withNitroNewArchFix: ConfigPlugin = (config) =>
+  withDangerousMod(config, [
+    'ios',
+    async (cfg) => {
+      const target = path.join(
+        cfg.modRequest.projectRoot,
+        'node_modules/react-native-nitro-modules/ios/turbomodule/NativeNitroModules+NewArch.mm',
+      )
+      if (fs.existsSync(target)) {
+        const src = fs.readFileSync(target, 'utf8')
+        if (!src.includes('installJSIBindingsWithRuntime:(jsi::Runtime&)runtime\n                          callInvoker:')) {
+          const anchor = '- (void)installJSIBindingsWithRuntime:(jsi::Runtime&)runtime {'
+          if (!src.includes(anchor)) {
+            throw new Error('withIosPlugin: could not find installJSIBindingsWithRuntime: in NativeNitroModules+NewArch.mm')
+          }
+          const bridgeMethod = `- (void)installJSIBindingsWithRuntime:(jsi::Runtime&)runtime
+                          callInvoker:(const std::shared_ptr<react::CallInvoker>&)callInvoker {
+  if (_callInvoker.expired() && callInvoker != nullptr) {
+    _callInvoker = callInvoker;
+  }
+  [self installJSIBindingsWithRuntime:runtime];
+}
+
+${anchor}`
+          fs.writeFileSync(target, src.replace(anchor, bridgeMethod), 'utf8')
+        }
+      }
+      return cfg
+    },
+  ])
+
 const withIosPlugin: ConfigPlugin = (config) =>
-  withoutPushEntitlement(withPodDeploymentTarget(config))
+  withNitroNewArchFix(withoutPushEntitlement(withPodDeploymentTarget(config)))
 
 export default withIosPlugin
