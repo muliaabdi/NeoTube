@@ -714,6 +714,9 @@ var builtinUserStyleDefinitions = [
         transform: translateY(-50%) !important;
         width: 56px !important;
         height: auto !important;
+        max-height: 92vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         flex-direction: column !important;
         border-radius: 20px 0 0 20px !important;
         background: rgba(18, 18, 18, 0.9) !important;
@@ -1086,7 +1089,7 @@ function watchPictureInPictureVideo() {
   }
   reportPictureInPictureVideo();
 }
-// .worktrees/local-playback/node_modules/es-toolkit/dist/error/AbortError.mjs
+// node_modules/es-toolkit/dist/error/AbortError.mjs
 class AbortError extends Error {
   constructor(message = "The operation was aborted") {
     super(message);
@@ -1094,7 +1097,7 @@ class AbortError extends Error {
   }
 }
 
-// .worktrees/local-playback/node_modules/es-toolkit/dist/promise/delay.mjs
+// node_modules/es-toolkit/dist/promise/delay.mjs
 function delay(ms, { signal } = {}) {
   return new Promise((resolve, reject) => {
     const abortError = () => {
@@ -1115,7 +1118,7 @@ function delay(ms, { signal } = {}) {
   });
 }
 
-// .worktrees/local-playback/node_modules/es-toolkit/dist/function/retry.mjs
+// node_modules/es-toolkit/dist/function/retry.mjs
 var DEFAULT_DELAY = 0;
 var DEFAULT_RETRIES = Number.POSITIVE_INFINITY;
 var DEFAULT_SHOULD_RETRY = () => true;
@@ -1153,7 +1156,7 @@ async function retry(func, _options) {
   }
   throw error;
 }
-// .worktrees/local-playback/node_modules/es-toolkit/dist/function/debounce.mjs
+// node_modules/es-toolkit/dist/function/debounce.mjs
 function debounce(func, debounceMs, { signal, edges } = {}) {
   let pendingThis = undefined;
   let pendingArgs = null;
@@ -1215,7 +1218,7 @@ function debounce(func, debounceMs, { signal, edges } = {}) {
   return debounced;
 }
 
-// .worktrees/local-playback/node_modules/es-toolkit/dist/function/throttle.mjs
+// node_modules/es-toolkit/dist/function/throttle.mjs
 function throttle(func, throttleMs, { signal, edges = ["leading", "trailing"] } = {}) {
   let pendingAt = null;
   const debounced = debounce(function(...args) {
@@ -5606,23 +5609,27 @@ function installNavbarButtons() {
   if (window.NouTubeRole === "player" || document.location.pathname.startsWith("/embed/")) {
     return;
   }
+  const getExpectedHost = () => {
+    const verticalEnabled = Boolean(window.NouTube?.getUserStyles?.()?.builtins?.["vertical-navbar"]?.enabled);
+    const pivot = verticalEnabled ? document.querySelector("ytm-pivot-bar-renderer") : null;
+    return {
+      pivot,
+      host: pivot || document.body || document.documentElement
+    };
+  };
   const render = () => {
     let container = document.querySelector(`.${containerClass}`);
     if (!container) {
       container = document.createElement("div");
       container.className = containerClass;
     }
-    const verticalEnabled = Boolean(window.NouTube?.getUserStyles?.()?.builtins?.["vertical-navbar"]?.enabled);
-    const pivot = verticalEnabled ? document.querySelector("ytm-pivot-bar-renderer") : null;
+    const { pivot, host } = getExpectedHost();
     if (pivot) {
       if (container.parentElement !== pivot) {
         pivot.insertBefore(container, pivot.firstChild);
       }
-    } else {
-      const host = document.body || document.documentElement;
-      if (container.parentElement !== host) {
-        host.appendChild(container);
-      }
+    } else if (host && container.parentElement !== host) {
+      host.appendChild(container);
     }
     container.style.cssText = pivot ? inPivotStyle : standaloneStyle;
     const flags = window.NouTube?.getSettings?.()?.navbarButtons || {};
@@ -5643,17 +5650,27 @@ function installNavbarButtons() {
   const syncFullscreenVisibility = (container) => {
     container.style.display = document.fullscreenElement ? "none" : "flex";
   };
-  window.addEventListener("noutube:settings", render);
-  window.addEventListener("noutube:user-styles", render);
-  document.addEventListener("fullscreenchange", render);
-  setInterval(() => {
+  const ensurePlaced = () => {
     const container = document.querySelector(`.${containerClass}`);
-    if (!container) {
+    const { host } = getExpectedHost();
+    if (!container || host && container.parentElement !== host) {
       render();
     } else {
       syncFullscreenVisibility(container);
     }
-  }, 2000);
+  };
+  window.addEventListener("noutube:settings", render);
+  window.addEventListener("noutube:user-styles", render);
+  document.addEventListener("fullscreenchange", render);
+  document.addEventListener("DOMContentLoaded", ensurePlaced);
+  window.addEventListener("yt-navigate-finish", ensurePlaced);
+  if (typeof MutationObserver !== "undefined" && document.documentElement) {
+    new MutationObserver(ensurePlaced).observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+  }
+  setInterval(ensurePlaced, 2000);
   render();
 }
 

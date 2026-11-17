@@ -81,6 +81,17 @@ export function installNavbarButtons() {
     return
   }
 
+  const getExpectedHost = () => {
+    const verticalEnabled = Boolean(
+      ((window as any).NouTube?.getUserStyles?.() as any)?.builtins?.['vertical-navbar']?.enabled,
+    )
+    const pivot = verticalEnabled ? document.querySelector('ytm-pivot-bar-renderer') : null
+    return {
+      pivot,
+      host: pivot || document.body || document.documentElement,
+    }
+  }
+
   const render = () => {
     let container = document.querySelector(`.${containerClass}`) as HTMLElement | null
     if (!container) {
@@ -91,19 +102,13 @@ export function installNavbarButtons() {
     // navbar is the vertical one (our user style) -- inside the stock
     // horizontal bottom bar a vertical block would wreck the layout. Standalone
     // pill on the right edge is the fallback for that and pivot-less pages.
-    const verticalEnabled = Boolean(
-      ((window as any).NouTube?.getUserStyles?.() as any)?.builtins?.['vertical-navbar']?.enabled,
-    )
-    const pivot = verticalEnabled ? document.querySelector('ytm-pivot-bar-renderer') : null
+    const { pivot, host } = getExpectedHost()
     if (pivot) {
       if (container.parentElement !== pivot) {
         pivot.insertBefore(container, pivot.firstChild)
       }
-    } else {
-      const host = document.body || document.documentElement
-      if (container.parentElement !== host) {
-        host.appendChild(container)
-      }
+    } else if (host && container.parentElement !== host) {
+      host.appendChild(container)
     }
     ;(container as any).style.cssText = pivot ? inPivotStyle : standaloneStyle
     const flags: NavbarButtonFlags =
@@ -129,6 +134,16 @@ export function installNavbarButtons() {
     container.style.display = document.fullscreenElement ? 'none' : 'flex'
   }
 
+  const ensurePlaced = () => {
+    const container = document.querySelector(`.${containerClass}`) as HTMLElement | null
+    const { host } = getExpectedHost()
+    if (!container || (host && container.parentElement !== host)) {
+      render()
+    } else {
+      syncFullscreenVisibility(container)
+    }
+  }
+
   // 'noutube:settings' mirrors noutubeSettingsEvent in content/noutube.ts; kept
   // a literal so this testable module does not pull the whole page bundle in.
   window.addEventListener('noutube:settings', render)
@@ -136,17 +151,21 @@ export function installNavbarButtons() {
   // toggling the vertical navbar must re-place the column immediately.
   window.addEventListener('noutube:user-styles', render)
   document.addEventListener('fullscreenchange', render)
+  document.addEventListener('DOMContentLoaded', ensurePlaced)
+  window.addEventListener('yt-navigate-finish', ensurePlaced)
+
+  // Re-place as soon as ytm-pivot-bar-renderer hydrates (critical on iOS WKWebView
+  // where .atDocumentStart runs before body/pivot exists).
+  if (typeof MutationObserver !== 'undefined' && document.documentElement) {
+    new MutationObserver(ensurePlaced).observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    })
+  }
 
   // YouTube's SPA passes can drop foreign nodes; put the column back and keep
   // its fullscreen visibility honest.
-  setInterval(() => {
-    const container = document.querySelector(`.${containerClass}`) as HTMLElement | null
-    if (!container) {
-      render()
-    } else {
-      syncFullscreenVisibility(container)
-    }
-  }, 2000)
+  setInterval(ensurePlaced, 2000)
 
   render()
 }

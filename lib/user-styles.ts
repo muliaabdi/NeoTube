@@ -101,6 +101,9 @@ export const builtinUserStyleDefinitions: BuiltinUserStyleDefinition[] = [
         transform: translateY(-50%) !important;
         width: 56px !important;
         height: auto !important;
+        max-height: 92vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         flex-direction: column !important;
         border-radius: 20px 0 0 20px !important;
         background: rgba(18, 18, 18, 0.9) !important;
