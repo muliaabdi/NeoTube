@@ -59,6 +59,7 @@ public final class NouTubeView: ExpoView, WKNavigationDelegate, WKUIDelegate, WK
   private var proxyRetryURL: URL?
   private var lastBrightness = UIScreen.main.brightness
   private var pipWakeFrames: Int?
+  private var backgroundTaskId: UIBackgroundTaskIdentifier = .invalid
   private let refreshControl = UIRefreshControl()
 
   public required init(appContext: AppContext? = nil) {
@@ -274,7 +275,12 @@ public final class NouTubeView: ExpoView, WKNavigationDelegate, WKUIDelegate, WK
       // around, so listen for them on the way down instead of binding to one
       // element.
       ;['play', 'playing', 'loadedmetadata'].forEach(function (type) {
-        document.addEventListener(type, function (e) { armPictureInPicture(e.target) }, true)
+        document.addEventListener(type, function (e) {
+          armPictureInPicture(e.target)
+          if (type !== 'loadedmetadata' && e.target instanceof HTMLVideoElement) {
+            post('activateAudio', {})
+          }
+        }, true)
       })
 
       var post = function (name, body) {
@@ -383,6 +389,8 @@ public final class NouTubeView: ExpoView, WKNavigationDelegate, WKUIDelegate, WK
       )
       UIApplication.shared.isIdleTimerDisabled = playing
       recoverPictureInPictureIfNeeded(playing: playing, frames: body["frames"] as? Int ?? -1)
+    case "activateAudio":
+      NouNowPlaying.shared.activateAudioSession()
     default:
       break
     }
@@ -638,8 +646,31 @@ public final class NouTubeView: ExpoView, WKNavigationDelegate, WKUIDelegate, WK
     try await evaluateJavaScript(pictureInPictureScript) ?? "no-video"
   }
 
+  private func endBackgroundResumeTask() {
+    guard backgroundTaskId != .invalid else { return }
+    UIApplication.shared.endBackgroundTask(backgroundTaskId)
+    backgroundTaskId = .invalid
+  }
+
   func setBackground(_ background: Bool) {
     webView.evaluateJavaScript("window.NouTubeBackground = \(background)", completionHandler: nil)
+    if !background {
+      endBackgroundResumeTask()
+      return
+    }
+    endBackgroundResumeTask()
+    backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: "NouTubeBackgroundResume") { [weak self] in
+      self?.endBackgroundResumeTask()
+    }
+    for delay in [0.15, 0.45, 1.0] {
+      DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+        guard let self, self.backgroundTaskId != .invalid else { return }
+        self.webView.evaluateJavaScript("window.__nouCheckBackgroundResume && window.__nouCheckBackgroundResume()", completionHandler: nil)
+      }
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) { [weak self] in
+      self?.endBackgroundResumeTask()
+    }
   }
 
   // evaluateJavaScript answers with the value itself; the Android side answers

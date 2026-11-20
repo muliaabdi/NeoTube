@@ -5511,8 +5511,12 @@ function installBackgroundGuard() {
   }
   document.addEventListener("pause", (event) => {
     const player = document.getElementById("movie_player");
-    if (!isBackground() && event.target instanceof Node && player?.contains(event.target)) {
-      appPaused = true;
+    if (event.target instanceof Node && player?.contains(event.target)) {
+      if (!isBackground()) {
+        appPaused = true;
+      } else if (!appPaused && wasPlaying) {
+        setTimeout(checkAndResumeBackgroundPlayback, 150);
+      }
     }
   }, true);
   for (const type of ["play", "playing"]) {
@@ -5524,7 +5528,7 @@ function installBackgroundGuard() {
       }
     }, true);
   }
-  setInterval(() => {
+  const checkAndResumeBackgroundPlayback = () => {
     const player = document.getElementById("movie_player");
     if (!player?.getPlayerState) {
       return;
@@ -5562,7 +5566,9 @@ function installBackgroundGuard() {
     const dismissed = confirmYouThereDialogs();
     log(`background guard: resuming (attempt ${resumeAttempts}, dialog: ${dismissed})`);
     player.playVideo?.();
-  }, 5000);
+  };
+  window.__nouCheckBackgroundResume = checkAndResumeBackgroundPlayback;
+  setInterval(checkAndResumeBackgroundPlayback, 5000);
 }
 
 // content/navbar.ts

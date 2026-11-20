@@ -109,6 +109,11 @@ final class NouNowPlaying {
     artworkTask?.resume()
   }
 
+  func ensureAudioSessionActive() {
+    activateAudioSession()
+    try? AVAudioSession.sharedInstance().setActive(true)
+  }
+
   private func run(_ script: String) -> MPRemoteCommandHandlerStatus {
     guard let owner else { return .noSuchContent }
     DispatchQueue.main.async {
@@ -123,10 +128,14 @@ final class NouNowPlaying {
     activateAudioSession()
 
     let center = MPRemoteCommandCenter.shared()
-    center.playCommand.addTarget { [weak self] _ in self?.run("NouTube.play()") ?? .noSuchContent }
+    center.playCommand.addTarget { [weak self] _ in
+      self?.ensureAudioSessionActive()
+      return self?.run("NouTube.play()") ?? .noSuchContent
+    }
     center.pauseCommand.addTarget { [weak self] _ in self?.run("NouTube.pause()") ?? .noSuchContent }
     center.togglePlayPauseCommand.addTarget { [weak self] _ in
       guard let self else { return .noSuchContent }
+      if !self.playing { self.ensureAudioSessionActive() }
       return self.run(self.playing ? "NouTube.pause()" : "NouTube.play()")
     }
     center.nextTrackCommand.addTarget { [weak self] _ in self?.run("NouTube.next()") ?? .noSuchContent }

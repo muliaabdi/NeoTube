@@ -113,8 +113,12 @@ export function installBackgroundGuard() {
     'pause',
     (event) => {
       const player = document.getElementById('movie_player')
-      if (!isBackground() && event.target instanceof Node && player?.contains(event.target)) {
-        appPaused = true
+      if (event.target instanceof Node && player?.contains(event.target)) {
+        if (!isBackground()) {
+          appPaused = true
+        } else if (!appPaused && wasPlaying) {
+          setTimeout(checkAndResumeBackgroundPlayback, 150)
+        }
       }
     },
     true,
@@ -137,7 +141,7 @@ export function installBackgroundGuard() {
     )
   }
 
-  setInterval(() => {
+  const checkAndResumeBackgroundPlayback = () => {
     const player = document.getElementById('movie_player') as any
     if (!player?.getPlayerState) {
       return
@@ -185,5 +189,8 @@ export function installBackgroundGuard() {
     const dismissed = confirmYouThereDialogs()
     log(`background guard: resuming (attempt ${resumeAttempts}, dialog: ${dismissed})`)
     player.playVideo?.()
-  }, 5000)
+  }
+
+  ;(window as any).__nouCheckBackgroundResume = checkAndResumeBackgroundPlayback
+  setInterval(checkAndResumeBackgroundPlayback, 5000)
 }
