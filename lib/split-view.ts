@@ -1,7 +1,7 @@
 import { ObservableHint } from '@legendapp/state'
 import { ui$ } from '@/states/ui'
 import { settings$ } from '@/states/settings'
-import { isAndroid } from './utils'
+import { isAndroid, isIos } from './utils'
 import { isWatchUrl } from './split-watch-url'
 import { retryNativeViewCall } from './native-view-call'
 
@@ -31,7 +31,7 @@ let pendingPlayerUrl = ''
 let playerLoadToken = 0
 
 export function isSplitWatchEnabled() {
-  return isAndroid && (settings$.miniPlayer.get() ?? true)
+  return (isAndroid || isIos) && (settings$.miniPlayer.get() ?? true)
 }
 
 export function isShortsUrl(url: string) {

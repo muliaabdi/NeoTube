@@ -364,7 +364,7 @@ export const MainPageContent: React.FC<{ contentJs: string }> = ({ contentJs }) 
   const nativeRef = useRef<typeof NouTubeViewModule>(null)
   const playerRef = useRef<typeof NouTubeViewModule>(null)
   // Mobile always supports split watch view for seamless background/mini playback
-  const splitWatchView = (useValue(settings$.miniPlayer) ?? true) && isAndroid
+  const splitWatchView = (useValue(settings$.miniPlayer) ?? true) && (isAndroid || isIos)
   const showHeader = useValue(settings$.showHeader)
   const playerUrl = useValue(ui$.playerUrl)
   const playerMode = useValue(ui$.playerMode)

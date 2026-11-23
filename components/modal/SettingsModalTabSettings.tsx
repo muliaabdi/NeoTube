@@ -702,7 +702,7 @@ export const SettingsYouTubeContent = () => {
               value={settings.preferH264}
               onPress={() => settings$.preferH264.set(!settings.preferH264)}
             />
-            {isAndroid ? (
+            {isAndroid || isIos ? (
               <>
                 {/* The mini player is the split watch view: /watch gets a
                     webview of its own, and leaving a video shrinks that same
@@ -715,13 +715,15 @@ export const SettingsYouTubeContent = () => {
                   value={settings.miniPlayer}
                   onPress={() => settings$.miniPlayer.set(!settings.miniPlayer)}
                 />
-                <SettingsToggleRow
-                  label={t('settings.pictureInPicture')}
-                  description={t('settings.pictureInPictureHint')}
-                  icon="picture-in-picture"
-                  value={settings.pictureInPicture}
-                  onPress={() => settings$.pictureInPicture.set(!settings.pictureInPicture)}
-                />
+                {isAndroid ? (
+                  <SettingsToggleRow
+                    label={t('settings.pictureInPicture')}
+                    description={t('settings.pictureInPictureHint')}
+                    icon="picture-in-picture"
+                    value={settings.pictureInPicture}
+                    onPress={() => settings$.pictureInPicture.set(!settings.pictureInPicture)}
+                  />
+                ) : null}
               </>
             ) : null}
             <SettingsToggleRow
