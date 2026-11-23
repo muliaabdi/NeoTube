@@ -658,13 +658,93 @@ const cssContent = css`
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 1;
+    z-index: 5;
   }
   ._nou_sb_segment {
     position: absolute;
     top: 0;
     height: 100%;
-    opacity: 0.85;
+    opacity: 0.9;
+    border-radius: 1px;
+  }
+  #_nou_sb_panel {
+    margin: 8px 12px;
+    border-radius: 12px;
+    background: var(--yt-spec-badge-chip-background, rgba(128, 128, 128, 0.14));
+    color: var(--yt-spec-text-primary, inherit);
+    overflow: hidden;
+    font-family: inherit;
+  }
+  ._nou_sb_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+  }
+  ._nou_sb_header_left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  ._nou_sb_dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  ._nou_sb_dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  ._nou_sb_chevron {
+    font-size: 13px;
+    opacity: 0.75;
+    flex-shrink: 0;
+  }
+  ._nou_sb_list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--yt-spec-10-percent-layer, rgba(128, 128, 128, 0.2));
+  }
+  ._nou_sb_row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 9px 14px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+  }
+  ._nou_sb_row:active {
+    background: var(--yt-spec-10-percent-layer, rgba(128, 128, 128, 0.2));
+  }
+  ._nou_sb_row_left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  ._nou_sb_row_time {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+    font-size: 12px;
+    flex-shrink: 0;
   }
 `
 

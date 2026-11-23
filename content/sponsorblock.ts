@@ -51,11 +51,44 @@ const categoryColors: Record<string, string> = {
   filler: '#7300ff',
 }
 
+const categoryLabels: Record<string, string> = {
+  sponsor: 'Sponsor',
+  selfpromo: 'Self-Promo',
+  interaction: 'Interaction',
+  intro: 'Intro',
+  outro: 'Outro',
+  preview: 'Preview',
+  music_offtopic: 'Music: Non-Music',
+  poi_highlight: 'Highlight',
+  filler: 'Filler',
+}
+
+export function formatSegmentTime(seconds: number): string {
+  const total = Math.max(0, Math.floor(seconds))
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = total % 60
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`
+}
+
+export function getCategoryLabel(category: string): string {
+  return categoryLabels[category] || category
+}
+
 const overlayClass = '_nou_sb_segments'
 const segmentClass = '_nou_sb_segment'
+const panelId = '_nou_sb_panel'
 
 // The bar that spans the whole duration: new mobile layout, then desktop, then the older mobile one.
-const progressBarSelectors = ['.ytChapteredProgressBarHost', '.ytp-progress-list', '.progress-bar-line', '.progress-bar-background']
+const progressBarSelectors = [
+  '.ytChapteredProgressBarHost',
+  '.ytPlayerProgressBarHost',
+  '.ytProgressBarLine',
+  '.ytp-progress-list',
+  '.progress-bar-line',
+  '.progress-bar-background',
+]
 // Chaptered videos split the bar into per-chapter blocks separated by gaps, so a
 // segment has to be drawn piecewise to stay aligned with the time it covers.
 const chapterSelectors = ['.ytChapteredProgressBarChapteredPlayerBarChapter', '.ytp-chapter-hover-container']
@@ -71,7 +104,7 @@ function getProgressBars() {
   const bars: HTMLElement[] = []
   for (const selector of progressBarSelectors) {
     for (const el of document.querySelectorAll<HTMLElement>(selector)) {
-      if (el.offsetWidth > 0) {
+      if (el.offsetWidth > 0 && !bars.some((b) => b.contains(el) || el.contains(b))) {
         bars.push(el)
       }
     }
@@ -114,10 +147,142 @@ export function clearSkipSegments() {
     ;(el.parentElement as HTMLElement | null)?.removeAttribute('data-nou-sb')
     el.remove()
   }
+  document.getElementById(panelId)?.remove()
+}
+
+function seekToTime(seconds: number) {
+  const player = document.getElementById('movie_player') as any
+  if (typeof player?.seekTo === 'function') {
+    player.seekTo(seconds, true)
+    return
+  }
+  const video = document.querySelector('video')
+  if (video) {
+    video.currentTime = seconds
+  }
+}
+
+function renderSegmentsPanel(videoId: string, segments: Segment[], segmentKey: string) {
+  const visibleSegments = segments
+    .filter((s) => s.actionType !== 'full')
+    .slice()
+    .sort((a, b) => a.segment[0] - b.segment[0])
+
+  if (!visibleSegments.length) {
+    document.getElementById(panelId)?.remove()
+    return
+  }
+
+  const anchor =
+    document.querySelector('ytm-slim-video-metadata-section-renderer') ||
+    document.querySelector('ytd-watch-metadata') ||
+    document.querySelector('#above-the-fold')
+  if (!anchor?.parentElement) {
+    return
+  }
+
+  const key = `${videoId}:${segmentKey}`
+  let panel = document.getElementById(panelId) as HTMLElement | null
+  if (panel && panel.dataset.nouSbPanel === key && panel.previousElementSibling === anchor) {
+    return
+  }
+
+  const wasExpanded = panel?.dataset.expanded === 'true' && panel.dataset.videoId === videoId
+  panel?.remove()
+
+  panel = document.createElement('div')
+  panel.id = panelId
+  panel.dataset.nouSbPanel = key
+  panel.dataset.videoId = videoId
+  panel.dataset.expanded = wasExpanded ? 'true' : 'false'
+
+  const header = document.createElement('button')
+  header.type = 'button'
+  header.className = '_nou_sb_header'
+
+  const left = document.createElement('span')
+  left.className = '_nou_sb_header_left'
+
+  const title = document.createElement('span')
+  title.className = '_nou_sb_title'
+  title.textContent = `SponsorBlock (${visibleSegments.length})`
+  left.append(title)
+
+  const dots = document.createElement('span')
+  dots.className = '_nou_sb_dots'
+  const seenCategories = new Set<string>()
+  for (const seg of visibleSegments) {
+    if (seenCategories.has(seg.category)) continue
+    seenCategories.add(seg.category)
+    const dot = document.createElement('span')
+    dot.className = '_nou_sb_dot'
+    dot.style.background = categoryColors[seg.category] || categoryColors.sponsor
+    dots.append(dot)
+  }
+  left.append(dots)
+
+  const chevron = document.createElement('span')
+  chevron.className = '_nou_sb_chevron'
+  chevron.textContent = wasExpanded ? '▾' : '▸'
+
+  header.append(left, chevron)
+
+  const list = document.createElement('div')
+  list.className = '_nou_sb_list'
+  list.style.display = wasExpanded ? 'flex' : 'none'
+
+  for (const seg of visibleSegments) {
+    const row = document.createElement('button')
+    row.type = 'button'
+    row.className = '_nou_sb_row'
+    row.onclick = () => seekToTime(seg.segment[0])
+
+    const rowLeft = document.createElement('span')
+    rowLeft.className = '_nou_sb_row_left'
+
+    const dot = document.createElement('span')
+    dot.className = '_nou_sb_dot'
+    dot.style.background = categoryColors[seg.category] || categoryColors.sponsor
+
+    const label = document.createElement('span')
+    label.className = '_nou_sb_row_label'
+    label.textContent = getCategoryLabel(seg.category)
+
+    rowLeft.append(dot, label)
+
+    const time = document.createElement('span')
+    time.className = '_nou_sb_row_time'
+    const startText = formatSegmentTime(seg.segment[0])
+    const endText = formatSegmentTime(seg.segment[1])
+    time.textContent = seg.segment[0] === seg.segment[1] ? startText : `${startText} – ${endText}`
+
+    row.append(rowLeft, time)
+    list.append(row)
+  }
+
+  header.onclick = () => {
+    const next = panel!.dataset.expanded !== 'true'
+    panel!.dataset.expanded = next ? 'true' : 'false'
+    list.style.display = next ? 'flex' : 'none'
+    chevron.textContent = next ? '▾' : '▸'
+  }
+
+  panel.append(header, list)
+  anchor.insertAdjacentElement('afterend', panel)
 }
 
 export function renderSkipSegments(videoId: string, segments: Segment[], duration: number) {
-  if (!videoId || !duration || !Number.isFinite(duration)) {
+  if (!videoId) {
+    return
+  }
+
+  const segmentKey = segments
+    .map(({ actionType, category, segment }) => `${actionType}:${category}:${segment[0]}:${segment[1]}`)
+    .join(',')
+
+  renderSegmentsPanel(videoId, segments, segmentKey)
+
+  if (!duration || !Number.isFinite(duration)) {
     return
   }
 
@@ -126,10 +291,7 @@ export function renderSkipSegments(videoId: string, segments: Segment[], duratio
     emit('log', `[sponsorblock] found ${segments.length} segments for ${videoId}, progress bars found: ${bars.length}`)
   }
 
-  const segmentKey = segments
-    .map(({ actionType, category, segment }) => `${actionType}:${category}:${segment[0]}:${segment[1]}`)
-    .join(',')
-  for (const bar of getProgressBars()) {
+  for (const bar of bars) {
     const overlay = bar.querySelector<HTMLElement>(`.${overlayClass}`)
     const chapters = getChapters(bar)
     const chapterKey = chapters

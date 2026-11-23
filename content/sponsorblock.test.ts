@@ -21,11 +21,13 @@ describe('sponsorblock categories', () => {
   let getSponsorBlockCategories: () => string[]
   let getSkipSegments: (videoId: string, categories: string[]) => Promise<{ videoId: string; segments: unknown[] }>
   let DEFAULT_SPONSOR_BLOCK_CATEGORIES: string[]
+  let formatSegmentTime: (seconds: number) => string
+  let getCategoryLabel: (category: string) => string
 
   beforeAll(async () => {
     ;(globalThis as any).window = globalThis
     ;(globalThis as any).document = { location: { host: 'm.youtube.com', pathname: '/' } }
-    ;({ getSponsorBlockCategories, getSkipSegments, DEFAULT_SPONSOR_BLOCK_CATEGORIES } = await import(
+    ;({ getSponsorBlockCategories, getSkipSegments, DEFAULT_SPONSOR_BLOCK_CATEGORIES, formatSegmentTime, getCategoryLabel } = await import(
       './sponsorblock'
     ))
   })
@@ -84,5 +86,14 @@ describe('sponsorblock categories', () => {
     } finally {
       globalThis.fetch = originalFetch
     }
+  })
+
+  it('formats segment timestamps and category labels', () => {
+    expect(formatSegmentTime(0)).toBe('0:00')
+    expect(formatSegmentTime(65.9)).toBe('1:05')
+    expect(formatSegmentTime(3661)).toBe('1:01:01')
+    expect(getCategoryLabel('sponsor')).toBe('Sponsor')
+    expect(getCategoryLabel('music_offtopic')).toBe('Music: Non-Music')
+    expect(getCategoryLabel('custom')).toBe('custom')
   })
 })

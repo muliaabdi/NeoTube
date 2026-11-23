@@ -1835,15 +1835,45 @@ var categoryColors = {
   poi_highlight: "#ff1684",
   filler: "#7300ff"
 };
+var categoryLabels = {
+  sponsor: "Sponsor",
+  selfpromo: "Self-Promo",
+  interaction: "Interaction",
+  intro: "Intro",
+  outro: "Outro",
+  preview: "Preview",
+  music_offtopic: "Music: Non-Music",
+  poi_highlight: "Highlight",
+  filler: "Filler"
+};
+function formatSegmentTime(seconds) {
+  const total = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor(total % 3600 / 60);
+  const s = total % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+}
+function getCategoryLabel(category) {
+  return categoryLabels[category] || category;
+}
 var overlayClass = "_nou_sb_segments";
 var segmentClass = "_nou_sb_segment";
-var progressBarSelectors = [".ytChapteredProgressBarHost", ".ytp-progress-list", ".progress-bar-line", ".progress-bar-background"];
+var panelId = "_nou_sb_panel";
+var progressBarSelectors = [
+  ".ytChapteredProgressBarHost",
+  ".ytPlayerProgressBarHost",
+  ".ytProgressBarLine",
+  ".ytp-progress-list",
+  ".progress-bar-line",
+  ".progress-bar-background"
+];
 var chapterSelectors = [".ytChapteredProgressBarChapteredPlayerBarChapter", ".ytp-chapter-hover-container"];
 function getProgressBars() {
   const bars = [];
   for (const selector of progressBarSelectors) {
     for (const el of document.querySelectorAll(selector)) {
-      if (el.offsetWidth > 0) {
+      if (el.offsetWidth > 0 && !bars.some((b) => b.contains(el) || el.contains(b))) {
         bars.push(el);
       }
     }
@@ -1878,17 +1908,115 @@ function clearSkipSegments() {
     el.parentElement?.removeAttribute("data-nou-sb");
     el.remove();
   }
+  document.getElementById(panelId)?.remove();
+}
+function seekToTime(seconds) {
+  const player = document.getElementById("movie_player");
+  if (typeof player?.seekTo === "function") {
+    player.seekTo(seconds, true);
+    return;
+  }
+  const video = document.querySelector("video");
+  if (video) {
+    video.currentTime = seconds;
+  }
+}
+function renderSegmentsPanel(videoId, segments, segmentKey) {
+  const visibleSegments = segments.filter((s) => s.actionType !== "full").slice().sort((a, b) => a.segment[0] - b.segment[0]);
+  if (!visibleSegments.length) {
+    document.getElementById(panelId)?.remove();
+    return;
+  }
+  const anchor = document.querySelector("ytm-slim-video-metadata-section-renderer") || document.querySelector("ytd-watch-metadata") || document.querySelector("#above-the-fold");
+  if (!anchor?.parentElement) {
+    return;
+  }
+  const key = `${videoId}:${segmentKey}`;
+  let panel = document.getElementById(panelId);
+  if (panel && panel.dataset.nouSbPanel === key && panel.previousElementSibling === anchor) {
+    return;
+  }
+  const wasExpanded = panel?.dataset.expanded === "true" && panel.dataset.videoId === videoId;
+  panel?.remove();
+  panel = document.createElement("div");
+  panel.id = panelId;
+  panel.dataset.nouSbPanel = key;
+  panel.dataset.videoId = videoId;
+  panel.dataset.expanded = wasExpanded ? "true" : "false";
+  const header = document.createElement("button");
+  header.type = "button";
+  header.className = "_nou_sb_header";
+  const left = document.createElement("span");
+  left.className = "_nou_sb_header_left";
+  const title = document.createElement("span");
+  title.className = "_nou_sb_title";
+  title.textContent = `SponsorBlock (${visibleSegments.length})`;
+  left.append(title);
+  const dots = document.createElement("span");
+  dots.className = "_nou_sb_dots";
+  const seenCategories = new Set;
+  for (const seg of visibleSegments) {
+    if (seenCategories.has(seg.category))
+      continue;
+    seenCategories.add(seg.category);
+    const dot = document.createElement("span");
+    dot.className = "_nou_sb_dot";
+    dot.style.background = categoryColors[seg.category] || categoryColors.sponsor;
+    dots.append(dot);
+  }
+  left.append(dots);
+  const chevron = document.createElement("span");
+  chevron.className = "_nou_sb_chevron";
+  chevron.textContent = wasExpanded ? "▾" : "▸";
+  header.append(left, chevron);
+  const list = document.createElement("div");
+  list.className = "_nou_sb_list";
+  list.style.display = wasExpanded ? "flex" : "none";
+  for (const seg of visibleSegments) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "_nou_sb_row";
+    row.onclick = () => seekToTime(seg.segment[0]);
+    const rowLeft = document.createElement("span");
+    rowLeft.className = "_nou_sb_row_left";
+    const dot = document.createElement("span");
+    dot.className = "_nou_sb_dot";
+    dot.style.background = categoryColors[seg.category] || categoryColors.sponsor;
+    const label = document.createElement("span");
+    label.className = "_nou_sb_row_label";
+    label.textContent = getCategoryLabel(seg.category);
+    rowLeft.append(dot, label);
+    const time = document.createElement("span");
+    time.className = "_nou_sb_row_time";
+    const startText = formatSegmentTime(seg.segment[0]);
+    const endText = formatSegmentTime(seg.segment[1]);
+    time.textContent = seg.segment[0] === seg.segment[1] ? startText : `${startText} – ${endText}`;
+    row.append(rowLeft, time);
+    list.append(row);
+  }
+  header.onclick = () => {
+    const next = panel.dataset.expanded !== "true";
+    panel.dataset.expanded = next ? "true" : "false";
+    list.style.display = next ? "flex" : "none";
+    chevron.textContent = next ? "▾" : "▸";
+  };
+  panel.append(header, list);
+  anchor.insertAdjacentElement("afterend", panel);
 }
 function renderSkipSegments(videoId, segments, duration) {
-  if (!videoId || !duration || !Number.isFinite(duration)) {
+  if (!videoId) {
+    return;
+  }
+  const segmentKey = segments.map(({ actionType, category, segment }) => `${actionType}:${category}:${segment[0]}:${segment[1]}`).join(",");
+  renderSegmentsPanel(videoId, segments, segmentKey);
+  if (!duration || !Number.isFinite(duration)) {
     return;
   }
   const bars = getProgressBars();
   if (segments.length > 0) {
     emit("log", `[sponsorblock] found ${segments.length} segments for ${videoId}, progress bars found: ${bars.length}`);
   }
-  const segmentKey = segments.map(({ actionType, category, segment }) => `${actionType}:${category}:${segment[0]}:${segment[1]}`).join(",");
-  for (const bar of getProgressBars()) {
+  for (const bar of bars) {
     const overlay = bar.querySelector(`.${overlayClass}`);
     const chapters = getChapters(bar);
     const chapterKey = chapters.map(({ start, end, left, width }) => `${start}:${end}:${left}:${width}`).join(",");
@@ -4102,13 +4230,93 @@ var cssContent = css2`
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 1;
+    z-index: 5;
   }
   ._nou_sb_segment {
     position: absolute;
     top: 0;
     height: 100%;
-    opacity: 0.85;
+    opacity: 0.9;
+    border-radius: 1px;
+  }
+  #_nou_sb_panel {
+    margin: 8px 12px;
+    border-radius: 12px;
+    background: var(--yt-spec-badge-chip-background, rgba(128, 128, 128, 0.14));
+    color: var(--yt-spec-text-primary, inherit);
+    overflow: hidden;
+    font-family: inherit;
+  }
+  ._nou_sb_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+  }
+  ._nou_sb_header_left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  ._nou_sb_dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  ._nou_sb_dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  ._nou_sb_chevron {
+    font-size: 13px;
+    opacity: 0.75;
+    flex-shrink: 0;
+  }
+  ._nou_sb_list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--yt-spec-10-percent-layer, rgba(128, 128, 128, 0.2));
+  }
+  ._nou_sb_row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 9px 14px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+  }
+  ._nou_sb_row:active {
+    background: var(--yt-spec-10-percent-layer, rgba(128, 128, 128, 0.2));
+  }
+  ._nou_sb_row_left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  ._nou_sb_row_time {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+    font-size: 12px;
+    flex-shrink: 0;
   }
 `;
 var getCoreCss = () => {
@@ -4942,7 +5150,7 @@ function formatPlaybackQuality(value) {
 
 // content/fullscreen-controls.ts
 var btnId = "_nou_fs_btn";
-var panelId = "_nou_fs_panel";
+var panelId2 = "_nou_fs_panel";
 var scrimId = "_nou_fs_scrim";
 var overlayId = "_nou_lock_overlay";
 var unlockBtnClass = "_nou_lock_unlock";
@@ -4989,7 +5197,7 @@ function applySide(element) {
 }
 function toggleSide() {
   nouStorage.setItem(sideKey, getSide() === "right" ? "left" : "right");
-  for (const id of [btnId, panelId, overlayId]) {
+  for (const id of [btnId, panelId2, overlayId]) {
     applySide(document.getElementById(id));
   }
 }
@@ -5021,12 +5229,12 @@ function revealUnlockButton(overlay) {
 }
 function blockEvent(event) {
   const overlay = document.getElementById(overlayId);
-  const panel = document.getElementById(panelId);
+  const panel = document.getElementById(panelId2);
   if (!overlay && !panel) {
     return;
   }
   const target = event.target;
-  if (target instanceof Element && target.closest(`#${panelId}, .${unlockBtnClass}`)) {
+  if (target instanceof Element && target.closest(`#${panelId2}, .${unlockBtnClass}`)) {
     return;
   }
   event.stopImmediatePropagation();
@@ -5059,7 +5267,7 @@ function unlockScreen() {
   clearTimeout(revealTimer);
   revealTimer = undefined;
   document.getElementById(overlayId)?.remove();
-  if (!document.getElementById(panelId)) {
+  if (!document.getElementById(panelId2)) {
     setEventBlocking(false);
   }
 }
@@ -5335,7 +5543,7 @@ function renderPanelContent(panel) {
   paintSlider(brightnessInput);
 }
 function closePanel() {
-  document.getElementById(panelId)?.remove();
+  document.getElementById(panelId2)?.remove();
   document.getElementById(scrimId)?.remove();
   if (!document.getElementById(overlayId)) {
     setEventBlocking(false);
@@ -5344,7 +5552,7 @@ function closePanel() {
 }
 function openPanel() {
   const host = getFullscreenElement();
-  if (!host || document.getElementById(panelId)) {
+  if (!host || document.getElementById(panelId2)) {
     return;
   }
   if (boost > 1) {
@@ -5353,7 +5561,7 @@ function openPanel() {
   const scrim = document.createElement("div");
   scrim.id = scrimId;
   const panel = document.createElement("div");
-  panel.id = panelId;
+  panel.id = panelId2;
   applySide(panel);
   renderPanelContent(panel);
   isolateEvents(panel);
@@ -5369,7 +5577,7 @@ function syncButtonVisibility() {
   if (!btn) {
     return;
   }
-  const hidden = !btn.matches(":hover") && (Boolean(document.getElementById(panelId)) || Boolean(getPlayer3()?.classList.contains("ytp-autohide")));
+  const hidden = !btn.matches(":hover") && (Boolean(document.getElementById(panelId2)) || Boolean(getPlayer3()?.classList.contains("ytp-autohide")));
   btn.classList.toggle(hiddenClass, hidden);
 }
 function renderControlsButton() {
