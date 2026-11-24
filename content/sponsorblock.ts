@@ -7,35 +7,35 @@ export interface Segment {
   segment: [number, number]
 }
 
-export function isSponsorBlockEnabled() {
+function readSponsorBlockSettings(): Record<string, unknown> | null {
   const value = nouStorage.getItem('nou:settings')
-  if (!value) {
-    return false
+  if (value) {
+    try {
+      return JSON.parse(value)
+    } catch {
+      // Fall through to in-memory settings
+    }
   }
-  try {
-    const settings = JSON.parse(value)
-    return settings.sponsorBlock
-  } catch (e) {
-    return false
-  }
+  const win = typeof window !== 'undefined' ? (window as any) : undefined
+  return win?.NouTube?.getSettings?.() || win?.NouTubeInitialSettings || null
+}
+
+export function isSponsorBlockEnabled() {
+  const settings = readSponsorBlockSettings()
+  return Boolean(settings?.sponsorBlock)
 }
 
 export const DEFAULT_SPONSOR_BLOCK_CATEGORIES = ['sponsor', 'selfpromo', 'interaction']
 
 export function getSponsorBlockCategories(): string[] {
-  const value = nouStorage.getItem('nou:settings')
-  if (!value) {
+  const settings = readSponsorBlockSettings()
+  if (!settings) {
     return DEFAULT_SPONSOR_BLOCK_CATEGORIES
   }
-  try {
-    const settings = JSON.parse(value)
-    // An explicit empty selection stands: the user turned every category off.
-    return Array.isArray(settings.sponsorBlockCategories)
-      ? settings.sponsorBlockCategories
-      : DEFAULT_SPONSOR_BLOCK_CATEGORIES
-  } catch (e) {
-    return DEFAULT_SPONSOR_BLOCK_CATEGORIES
-  }
+  // An explicit empty selection stands: the user turned every category off.
+  return Array.isArray(settings.sponsorBlockCategories)
+    ? settings.sponsorBlockCategories
+    : DEFAULT_SPONSOR_BLOCK_CATEGORIES
 }
 
 // https://wiki.sponsor.ajay.app/w/Types#Category

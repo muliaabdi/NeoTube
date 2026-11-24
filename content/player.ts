@@ -182,6 +182,15 @@ export function handleMutations(_mutations: MutationRecord[]) {
   const found = document.querySelector('#movie_player')
   if (found) {
     handleVideoPlayer(found)
+    if (
+      curVideoId &&
+      skipSegments.videoId === curVideoId &&
+      skipSegments.segments.length &&
+      !document.getElementById('_nou_sb_panel') &&
+      isSponsorBlockEnabled()
+    ) {
+      renderSkipSegments(curVideoId, skipSegments.segments, found.getDuration?.() || 0)
+    }
   } else if (player && !player.isConnected) {
     player.__nouPlayerCleanup?.()
     player = undefined
@@ -316,6 +325,23 @@ export function handleVideoPlayer(el: any) {
     segmentsResizeBinded = true
     window.addEventListener('resize', redrawSegments)
     document.addEventListener('fullscreenchange', onFullscreenChange)
+    window.addEventListener('noutube:settings', () => {
+      if (!isCurrent() || !curVideoId) return
+      if (!isSponsorBlockEnabled()) {
+        clearSkipSegments()
+        return
+      }
+      if (skipSegments.videoId !== curVideoId) {
+        const targetVideoId = curVideoId
+        void getSkipSegments(targetVideoId, getSponsorBlockCategories()).then((nextSkipSegments) => {
+          if (!isCurrent() || curVideoId !== targetVideoId) return
+          skipSegments = nextSkipSegments
+          renderSkipSegments(targetVideoId, nextSkipSegments.segments, duration || el.getDuration?.() || 0)
+        })
+      } else if (skipSegments.segments.length) {
+        renderSkipSegments(curVideoId, skipSegments.segments, duration || el.getDuration?.() || 0)
+      }
+    })
   }
 
   const media = bindPlayerMedia({
