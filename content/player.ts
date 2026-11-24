@@ -412,11 +412,16 @@ export function handleVideoPlayer(el: any) {
     }
   }
   el.addEventListener('onStateChange', onStateChange)
+  if (el.getPlayerResponse?.()?.videoDetails?.videoId) {
+    void onStateChange(el.getPlayerState?.() ?? 1)
+  }
   el.__nouPlayerCleanup = () => {
     active = false
     media.dispose()
-    el.removeEventListener('onStateChange', onStateChange)
-    el.removeEventListener('onApiChange', onApiChange)
+    if (typeof el.removeEventListener === 'function') {
+      el.removeEventListener('onStateChange', onStateChange)
+      el.removeEventListener('onApiChange', onApiChange)
+    }
     if (ownsResizeListeners) {
       window.removeEventListener('resize', redrawSegments)
       document.removeEventListener('fullscreenchange', onFullscreenChange)

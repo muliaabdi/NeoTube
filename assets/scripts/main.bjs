@@ -1862,8 +1862,9 @@ var segmentClass = "_nou_sb_segment";
 var panelId = "_nou_sb_panel";
 var progressBarSelectors = [
   ".ytChapteredProgressBarHost",
+  ".ytProgressBarLineProgressBarLine",
+  ".ytProgressBarLineHost",
   ".ytPlayerProgressBarHost",
-  ".ytProgressBarLine",
   ".ytp-progress-list",
   ".progress-bar-line",
   ".progress-bar-background"
@@ -2074,14 +2075,20 @@ async function getSkipSegments(videoId, categories) {
     videoID: videoId,
     categories: JSON.stringify(categories)
   });
-  const res = await fetch(`https://sponsor.ajay.app/api/skipSegments?${params}`);
-  let segments = [];
-  if (res.status == 200) {
-    segments = await res.json();
+  const url = `https://sponsor.ajay.app/api/skipSegments?${params}`;
+  for (let attempt = 0;attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url);
+      let segments = [];
+      if (res.status == 200) {
+        segments = await res.json();
+      }
+      return { videoId, segments };
+    } catch {}
   }
   return {
     videoId,
-    segments
+    segments: []
   };
 }
 
@@ -2548,11 +2555,16 @@ function handleVideoPlayer(el) {
     }
   };
   el.addEventListener("onStateChange", onStateChange);
+  if (el.getPlayerResponse?.()?.videoDetails?.videoId) {
+    onStateChange(el.getPlayerState?.() ?? 1);
+  }
   el.__nouPlayerCleanup = () => {
     active = false;
     media.dispose();
-    el.removeEventListener("onStateChange", onStateChange);
-    el.removeEventListener("onApiChange", onApiChange);
+    if (typeof el.removeEventListener === "function") {
+      el.removeEventListener("onStateChange", onStateChange);
+      el.removeEventListener("onApiChange", onApiChange);
+    }
     if (ownsResizeListeners) {
       window.removeEventListener("resize", redrawSegments);
       document.removeEventListener("fullscreenchange", onFullscreenChange);

@@ -83,8 +83,9 @@ const panelId = '_nou_sb_panel'
 // The bar that spans the whole duration: new mobile layout, then desktop, then the older mobile one.
 const progressBarSelectors = [
   '.ytChapteredProgressBarHost',
+  '.ytProgressBarLineProgressBarLine',
+  '.ytProgressBarLineHost',
   '.ytPlayerProgressBarHost',
-  '.ytProgressBarLine',
   '.ytp-progress-list',
   '.progress-bar-line',
   '.progress-bar-background',
@@ -363,13 +364,21 @@ export async function getSkipSegments(videoId: string, categories: string[]) {
     videoID: videoId,
     categories: JSON.stringify(categories),
   })
-  const res = await fetch(`https://sponsor.ajay.app/api/skipSegments?${params}`)
-  let segments: Segment[] = []
-  if (res.status == 200) {
-    segments = (await res.json()) as Segment[]
+  const url = `https://sponsor.ajay.app/api/skipSegments?${params}`
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url)
+      let segments: Segment[] = []
+      if (res.status == 200) {
+        segments = (await res.json()) as Segment[]
+      }
+      return { videoId, segments }
+    } catch {
+      // Transient WebView network errors can happen on initial page load.
+    }
   }
   return {
     videoId,
-    segments,
+    segments: [] as Segment[],
   }
 }

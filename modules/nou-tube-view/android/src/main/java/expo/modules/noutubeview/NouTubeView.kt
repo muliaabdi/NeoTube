@@ -762,6 +762,9 @@ class NouTubeView(context: Context, appContext: AppContext) : ExpoView(context, 
     activity?.registerForContextMenu(webView)
 
     webView.addJavascriptInterface(NouJsInterface(context, this), "NouTubeI")
+    if ((context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+      WebView.setWebContentsDebuggingEnabled(true)
+    }
 
     // some websites have `padding-bottom: env(safe-area-inset-bottom)`, this set it to 0
     ViewCompat.setOnApplyWindowInsetsListener(webView) { _, insets ->
